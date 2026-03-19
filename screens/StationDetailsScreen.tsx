@@ -5,6 +5,7 @@ import anime from 'animejs';
 import { Station, FuelFriend } from '../types';
 import { apiGetStationDetails } from '../services/api';
 import AnimatedPage from '../components/AnimatedPage';
+import FuelFriendAvatar, { DEFAULT_FUEL_FRIEND_AVATAR } from '../components/FuelFriendAvatar';
 import TapEffectButton from '../components/TapEffectButton';
 
 interface ExtendedFuelFriend extends FuelFriend {
@@ -991,19 +992,13 @@ const StationDetailsScreen = () => {
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
                   <div className="relative">
-                    <img
-                      src={selectedFuelFriend.avatarUrl || '/fuel-friend-avatar.svg'}
+                    <FuelFriendAvatar
+                      src={selectedFuelFriend.avatarUrl || DEFAULT_FUEL_FRIEND_AVATAR}
                       alt={selectedFuelFriend.name}
-                      className="w-12 h-12 rounded-full object-cover"
-                      onError={(e) => {
-                        e.currentTarget.src = '/fuel-friend-avatar.svg';
-                      }}
+                      sizeClassName="w-12 h-12"
+                      showBadge
+                      eager
                     />
-                    <div className="absolute -top-1 -right-1 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
-                      <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                      </svg>
-                    </div>
                   </div>
                   <div>
                     <h3 className="font-semibold text-gray-900">{assignedFuelFriendName}</h3>

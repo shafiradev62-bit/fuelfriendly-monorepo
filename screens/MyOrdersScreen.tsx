@@ -8,6 +8,7 @@ import { useAppContext } from '../context/AppContext';
 import LottieAnimation from '../components/LottieAnimation';
 import loadingAnimation from '../assets/animations/loading.json';
 import AnimatedPage from '../components/AnimatedPage';
+import FuelFriendAvatar, { DEFAULT_FUEL_FRIEND_AVATAR } from '../components/FuelFriendAvatar';
 import TapEffectButton from '../components/TapEffectButton';
 
 type Tab = 'ongoing' | 'history';
@@ -55,14 +56,13 @@ const DisputeModal = ({ isOpen, onClose, onConfirm, order }: DisputeModalProps) 
             <div className="bg-white rounded-3xl p-6 w-full max-w-sm animate-in fade-in zoom-in duration-200">
                 <div className="flex flex-col items-center text-center">
                     {/* Dynamic Avatar */}
-                    <div className="w-20 h-20 rounded-full overflow-hidden border-4 border-gray-100 mb-4 shadow-sm">
-                        <img
-                            src={order.fuelFriendPhoto || order.fuelFriend?.avatarUrl || order.fuelfriend?.avatar || '/fuel friend.png'}
+                    <div className="mb-4">
+                        <FuelFriendAvatar
+                            src={order.fuelFriendPhoto || order.fuelFriend?.avatarUrl || order.fuelfriend?.avatar || DEFAULT_FUEL_FRIEND_AVATAR}
                             alt={order.fuelFriendName || order.fuelFriend?.name || order.fuelfriend?.name || 'Fuel Friend'}
-                            className="w-full h-full object-cover"
-                            onError={(e) => {
-                                e.currentTarget.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='32' fill='%23e5e7eb'/%3E%3Cpath d='M32 16a8 8 0 1 0 0 16 8 8 0 0 0 0-16zM20 48a12 12 0 0 1 24 0H20z' fill='%23999'/%3E%3C/svg%3E";
-                            }}
+                            sizeClassName="w-20 h-20"
+                            showBadge
+                            eager
                         />
                     </div>
 
@@ -105,13 +105,12 @@ const OrderCard = ({ order, type, onDispute, onRequestCompleted }: OrderCardProp
     return (
         <div className="bg-white p-5 rounded-2xl mb-4 shadow-sm border border-gray-100">
             <div className="flex items-center">
-                <img
-                    src={order.fuelFriendPhoto || order.fuelFriend?.avatarUrl || order.fuelfriend?.avatar || '/fuel friend.png'}
+                <FuelFriendAvatar
+                    src={order.fuelFriendPhoto || order.fuelFriend?.avatarUrl || order.fuelfriend?.avatar || DEFAULT_FUEL_FRIEND_AVATAR}
                     alt={order.fuelFriendName || order.fuelFriend?.name || 'Fuel Friend'}
-                    className="w-14 h-14 rounded-full border-2 border-gray-100 object-cover"
-                    onError={(e) => {
-                        e.currentTarget.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='32' fill='%23e5e7eb'/%3E%3Cpath d='M32 16a8 8 0 1 0 0 16 8 8 0 0 0 0-16zM20 48a12 12 0 0 1 24 0H20z' fill='%23999'/%3E%3C/svg%3E";
-                    }}
+                    sizeClassName="w-14 h-14"
+                    showBadge
+                    eager
                 />
                 <div className="ml-4 flex-grow">
                     <div className="flex justify-between items-start">
@@ -186,18 +185,14 @@ const RatingModal = ({ isOpen, onClose, onSubmit, order }: RatingModalProps) => 
                     <h3 className="text-xl font-bold text-[#3F4249] mb-4">Rate Service</h3>
 
                     {/* Dynamic Avatar */}
-                    <div className="w-20 h-20 rounded-full overflow-hidden border-4 border-gray-100 mb-3 shadow-sm relative">
-                        <img
-                            src={order.fuelFriendPhoto || order.fuelFriend?.avatarUrl || order.fuelfriend?.avatar || '/fuel friend.png'}
+                    <div className="mb-3">
+                        <FuelFriendAvatar
+                            src={order.fuelFriendPhoto || order.fuelFriend?.avatarUrl || order.fuelfriend?.avatar || DEFAULT_FUEL_FRIEND_AVATAR}
                             alt={order.fuelFriendName || order.fuelFriend?.name || order.fuelfriend?.name || 'Fuel Friend'}
-                            className="w-full h-full object-cover"
-                            onError={(e) => {
-                                e.currentTarget.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='32' fill='%23e5e7eb'/%3E%3Cpath d='M32 16a8 8 0 1 0 0 16 8 8 0 0 0 0-16zM20 48a12 12 0 0 1 24 0H20z' fill='%23999'/%3E%3C/svg%3E";
-                            }}
+                            sizeClassName="w-20 h-20"
+                            showBadge
+                            eager
                         />
-                        <div className="absolute bottom-0 right-0 bg-[#3AC36C] rounded-full p-1 border-2 border-white">
-                            <CheckCircle size={12} color="white" />
-                        </div>
                     </div>
 
                     <h3 className="text-lg font-bold text-[#3F4249] mb-1">

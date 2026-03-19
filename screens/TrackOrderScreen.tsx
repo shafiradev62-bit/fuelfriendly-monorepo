@@ -7,6 +7,7 @@ import { apiGetOrders, apiGetOrderDetail, apiGetRouteDirections } from '../servi
 import AnimatedPage from '../components/AnimatedPage';
 import CallModal from '../components/CallModal';
 import ChatModal from '../components/ChatModal';
+import FuelFriendAvatar, { DEFAULT_FUEL_FRIEND_AVATAR } from '../components/FuelFriendAvatar';
 import QRScannerModal from '../components/QRScannerModal';
 import TapEffectButton from '../components/TapEffectButton';
 import MobileButton from '../components/MobileButton';
@@ -61,6 +62,53 @@ const sampleGasToUserRoute = {
       }
     }
   ]
+};
+
+const TRACKING_CAR_IMAGE = '/mobil tracking.png';
+const TRACKING_CAR_HEADING_OFFSET = 180;
+
+const normalizeHeadingDelta = (target: number, current: number) => {
+  let delta = target - current;
+  while (delta > 180) delta -= 360;
+  while (delta < -180) delta += 360;
+  return delta;
+};
+
+const applyMarkerHeading = (markerElement: HTMLElement, targetHeading: number, currentHeadingRef: { current: number }) => {
+  const nextHeading = currentHeadingRef.current + normalizeHeadingDelta(targetHeading, currentHeadingRef.current) * 0.18;
+  currentHeadingRef.current = nextHeading;
+
+  const rotateContainer = markerElement.querySelector('.car-rotate-container') as HTMLElement | null;
+  if (rotateContainer) {
+    rotateContainer.style.transform = `translateZ(0) rotate(${nextHeading + TRACKING_CAR_HEADING_OFFSET}deg)`;
+  }
+};
+
+const createTrackingCarMarker = () => {
+  const carMarker = document.createElement('div');
+  carMarker.className = 'car-marker';
+  carMarker.style.cssText = 'position: relative; width: 48px; height: 48px; filter: drop-shadow(0 8px 18px rgba(58, 195, 108, 0.28));';
+  carMarker.innerHTML = `
+    <div class="car-rotate-container" style="
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      will-change: transform;
+      transform: translateZ(0) rotate(${TRACKING_CAR_HEADING_OFFSET}deg);
+      transition: transform 180ms cubic-bezier(0.22, 1, 0.36, 1);
+    ">
+      <img src="${TRACKING_CAR_IMAGE}" alt="Tracking Car" style="
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        user-select: none;
+        pointer-events: none;
+      " />
+    </div>
+  `;
+  return carMarker;
 };
 
 const TrackOrderScreen = () => {
@@ -360,7 +408,7 @@ const TrackOrderScreen = () => {
         name: fuelFriendName,
         location: currentOrderData.fuelfriend.location || currentOrderData.deliveryAddress || 'Waiting for pickup',
         phone: currentOrderData.fuelfriend.phone || getRandomRealPhoneNumber(isUK),
-        avatar: '/fuel friend.png' // Always use stable avatar, prevent flickering
+        avatar: DEFAULT_FUEL_FRIEND_AVATAR // Always use stable local avatar, prevent flickering
       };
     }
 
@@ -368,7 +416,7 @@ const TrackOrderScreen = () => {
       name: fuelFriendName,
       location: currentOrderData?.deliveryAddress || 'Waiting for pickup',
       phone: getRandomRealPhoneNumber(isUK),
-      avatar: '/fuel friend.png'
+      avatar: DEFAULT_FUEL_FRIEND_AVATAR
     };
   };
 
@@ -590,7 +638,7 @@ const TrackOrderScreen = () => {
             name: 'FuelFriend',
             location: `On the way to ${defaultLocation}`,
             phone: isUK ? '+44-20-1234-5678' : '+1-555-123-4567',
-            avatar: '/fuel friend.png'
+            avatar: DEFAULT_FUEL_FRIEND_AVATAR
           },
           cartItems: [
             { id: '1', name: 'Regular Fuel', price: fuelPrice, quantity: 1 },
@@ -847,36 +895,9 @@ const TrackOrderScreen = () => {
         });
 
         // Animate car along the route
-        let currentIndex = 0;
 
-        // Create lightweight Jawg.io style car marker with navigation icon
-        const carMarker = document.createElement('div');
-        carMarker.className = 'car-marker';
-        carMarker.style.cssText = 'position: relative; width: 48px; height: 48px; filter: drop-shadow(0 4px 8px rgba(58, 195, 108, 0.4));';
-               
-        // Alternate between two car PNGs
-       const carImages= ['/mobil tracking.png', '/mobil tracking 1.png'];
-       const randomCarImage = carImages[Math.floor(Math.random() * carImages.length)];
-               
-       carMarker.innerHTML = `
-         <div style="
-           position: absolute;
-           top: 0;
-           left: 0;
-           width: 100%;
-           height: 100%;
-           display: flex;
-           align-items: center;
-           justify-content: center;
-           z-index: 50;
-         ">
-           <img src="${randomCarImage}" alt="Tracking Car" style="
-             width: 100%;
-             height: 100%;
-             object-fit: contain;
-           " />
-         </div>
-       `;
+        // Create a stable tracking marker so the vehicle never blinks/re-mounts mid-route
+        const carMarker = createTrackingCarMarker();
 
         const marker = new mapboxgl.Marker({
           element: carMarker,
@@ -886,22 +907,15 @@ const TrackOrderScreen = () => {
           .addTo(mapInstance);
           
         console.log('✅ Car marker created and added to map');
-        anime({
-          targets: carMarker,
-          scale: [1, 1.06, 1],
-          duration: 900,
-          loop: true,
-          easing: 'easeInOutSine'
-        });
 
         // Animate car movement (Smooth Interpolation)
         let isActive = true;
-        let currentHeading = 0; // Track current heading for rotation
+        const currentHeading = { current: 0 };
+        let lastCameraUpdate = 0;
 
         const smoothAnimateCar = () => {
           if (!isActive) return;
 
-          let index = 0;
           const startTime = performance.now();
           const totalDuration = 60000; // 1 minute total
                   
@@ -963,11 +977,9 @@ const TrackOrderScreen = () => {
               }
               
               const nextPos = [lng, lat] as [number, number];
-          
-              marker.setLngLat(nextPos);
-                              // Kept lightweight bounds via normal means without constant camera movement
 
-                            
+              marker.setLngLat(nextPos);
+
               // Calculate bearing for smooth rotation (no flip)
               const nextIndex = Math.min(segmentIndex + 1, coordinates.length - 1);
               const currentCoord = coordinates[segmentIndex] as [number, number];
@@ -983,25 +995,20 @@ const TrackOrderScreen = () => {
               // Normalize to 0-360 range
               bearing = (bearing + 360) % 360;
               
-              // Smooth transition - prevent sudden 180° flips
-              if (currentHeading !== 0) {
-                let diff = bearing - currentHeading;
-                // Normalize difference to -180 to 180 range
-                while (diff > 180) diff -= 360;
-                while (diff < -180) diff += 360;
-                // Apply smooth interpolation
-                bearing = currentHeading + diff * 0.15; // 15% interpolation for ultra smooth
+              applyMarkerHeading(carMarker, bearing, currentHeading);
+
+              if (timestamp - lastCameraUpdate > 900) {
+                mapInstance.easeTo({
+                  center: nextPos,
+                  bearing: bearing - 18,
+                  pitch: 58,
+                  zoom: Math.max(mapInstance.getZoom(), 14.8),
+                  duration: 850,
+                  essential: true
+                });
+                lastCameraUpdate = timestamp;
               }
-              
-              currentHeading = bearing;
-              
-              const rotateContainer = carMarker.querySelector('img') as HTMLElement;
-              if (rotateContainer) {
-                // Apply smooth rotation with CSS transition
-                rotateContainer.style.transition = 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
-                rotateContainer.style.transform = `rotate(${bearing}deg)`;
-              }
-                      
+
               requestAnimationFrame(animateFrame);
             } else {
               // ARRIVED
@@ -1111,34 +1118,8 @@ const TrackOrderScreen = () => {
       });
     }
 
-  // Add lightweight Jawg.io style car marker for fallback route
-    const carMarker = document.createElement('div');
-    carMarker.className= 'car-marker';
-    carMarker.style.cssText = 'position: relative; width: 48px; height: 48px; filter: drop-shadow(0 4px 8px rgba(58, 195, 108, 0.4));';
-      
-    // Alternate between two car PNGs
-   const carImages= ['/mobil tracking.png', '/mobil tracking 1.png'];
-   const randomCarImage = carImages[Math.floor(Math.random() * carImages.length)];
-      
-   carMarker.innerHTML = `
-     <div style="
-       position: absolute;
-       top: 0;
-       left: 0;
-       width: 100%;
-       height: 100%;
-       display: flex;
-       align-items: center;
-       justify-content: center;
-       z-index: 50;
-     ">
-       <img src="${randomCarImage}" alt="Tracking Car" style="
-         width: 100%;
-         height: 100%;
-         object-fit: contain;
-       " />
-     </div>
-   `;
+  // Add a stable tracking marker for the fallback route too
+    const carMarker = createTrackingCarMarker();
 
     const marker = new mapboxgl.Marker({
       element: carMarker,
@@ -1152,7 +1133,8 @@ const TrackOrderScreen = () => {
     // Smooth animation from start to end over 1 minute
     const startTime = performance.now();
     const totalDuration = 60000; // 1 minute in milliseconds
-    let lastBearing = 0; // Track last bearing for smooth transitions
+    const lastBearing = { current: 0 };
+    let lastCameraUpdate = 0;
 
     const animateFallback = (currentTime: number) => {
       const elapsed = currentTime - startTime;
@@ -1175,28 +1157,21 @@ const TrackOrderScreen = () => {
         // Normalize to 0-360 range
         bearing = (bearing + 360) % 360;
         
-        // Smooth transition - prevent sudden flips
-        if (lastBearing !== 0) {
-          let diff = bearing - lastBearing;
-          // Normalize difference to -180 to 180 range
-          while (diff > 180) diff -= 360;
-          while (diff < -180) diff += 360;
-          // Apply smooth interpolation
-          bearing = lastBearing + diff * 0.15;
-        }
-        
-        lastBearing = bearing;
-        
-        // Apply rotation to the container inside the marker
-        const rotateContainer = carMarker.querySelector('img') as HTMLElement;
-        if (rotateContainer) {
-          rotateContainer.style.transition = 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
-          rotateContainer.style.transform = `rotate(${bearing}deg)`;
-        }
+        applyMarkerHeading(carMarker, bearing, lastBearing);
 
         marker.setLngLat([lng, lat]);
 
-        // Lightweight marker movement without continuous camera panning
+        if (currentTime - lastCameraUpdate > 900) {
+          mapInstance.easeTo({
+            center: [lng, lat],
+            bearing: bearing - 18,
+            pitch: 58,
+            zoom: Math.max(mapInstance.getZoom(), 14.4),
+            duration: 850,
+            essential: true
+          });
+          lastCameraUpdate = currentTime;
+        }
 
         requestAnimationFrame(animateFallback);
       } else {
@@ -1543,18 +1518,19 @@ const TrackOrderScreen = () => {
               {/* Driver Information */}
               <div className="driver-info flex items-center justify-between mb-6">
                 <div className="flex items-center gap-3">
-                  <img
-                    src={driverData.avatar}
-                    alt={driverData.name}
-                    className="w-12 h-12 rounded-full object-cover"
-                    onError={(e) => {
-                      e.currentTarget.src = '/fuel friend.png';
-                      e.currentTarget.onerror = null;
-                    }}
-                  />
+                  <div className="relative shrink-0">
+                    <FuelFriendAvatar
+                      src={driverData.avatar || DEFAULT_FUEL_FRIEND_AVATAR}
+                      alt={driverData.name}
+                      sizeClassName="w-12 h-12"
+                      showBadge
+                      eager
+                    />
+                  </div>
                   <div>
                     <h3 className="font-semibold text-gray-900">{driverData.name}</h3>
                     <p className="text-sm text-gray-600">{driverData.location}</p>
+                    <p className="text-xs font-medium text-green-600">Assigned FuelFriend</p>
                   </div>
                 </div>
                 <div className="flex gap-3">

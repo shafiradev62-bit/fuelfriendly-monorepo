@@ -82,7 +82,7 @@ const CheckoutScreen = () => {
   const selectedFuelFriend = (stateData.selectedFuelFriend && typeof stateData.selectedFuelFriend === 'object') ? stateData.selectedFuelFriend : {
     id: 'default-friend',
     name: 'Fuel Friend',
-    avatarUrl: '/fuel friend.png'
+    avatarUrl: '/fuel-friend-avatar.svg'
   };
 
   // Debug logging

@@ -598,7 +598,7 @@ const HomeScreen = () => {
         name: 'James Mitchell',
         rating: 4.8,
         reviewCount: 156,
-        avatarUrl: '/fuel friend.png',
+        avatarUrl: '/fuel-friend-avatar.svg',
         location: '0.5 miles away',
         rate: 4.99,
         phone: '+447712345678'
@@ -608,7 +608,7 @@ const HomeScreen = () => {
         name: 'Emma Thompson',
         rating: 4.9,
         reviewCount: 203,
-        avatarUrl: '/fuel friend.png',
+        avatarUrl: '/fuel-friend-avatar.svg',
         location: '0.3 miles away',
         rate: 5.49,
         phone: '+447712345679'
@@ -618,7 +618,7 @@ const HomeScreen = () => {
         name: 'Michael Davies',
         rating: 4.7,
         reviewCount: 142,
-        avatarUrl: '/fuel friend.png',
+        avatarUrl: '/fuel-friend-avatar.svg',
         location: '0.8 miles away',
         rate: 4.49,
         phone: '+447712345680'
@@ -628,7 +628,7 @@ const HomeScreen = () => {
         name: 'Sarah Williams',
         rating: 5.0,
         reviewCount: 189,
-        avatarUrl: '/fuel friend.png',
+        avatarUrl: '/fuel-friend-avatar.svg',
         location: '0.6 miles away',
         rate: 6.99,
         phone: '+447712345681'
@@ -641,7 +641,7 @@ const HomeScreen = () => {
         name: 'David Johnson',
         rating: 4.8,
         reviewCount: 156,
-        avatarUrl: '/fuel friend.png',
+        avatarUrl: '/fuel-friend-avatar.svg',
         location: '0.5 miles away',
         rate: 5.99,
         phone: '+12125551234'
@@ -651,7 +651,7 @@ const HomeScreen = () => {
         name: 'Jennifer Smith',
         rating: 4.9,
         reviewCount: 203,
-        avatarUrl: '/fuel friend.png',
+        avatarUrl: '/fuel-friend-avatar.svg',
         location: '0.3 miles away',
         rate: 6.99,
         phone: '+12125551235'
@@ -661,7 +661,7 @@ const HomeScreen = () => {
         name: 'Robert Wilson',
         rating: 4.7,
         reviewCount: 142,
-        avatarUrl: '/fuel friend.png',
+        avatarUrl: '/fuel-friend-avatar.svg',
         location: '0.8 miles away',
         rate: 5.49,
         phone: '+12125551236'
@@ -671,7 +671,7 @@ const HomeScreen = () => {
         name: 'Maria Garcia',
         rating: 5.0,
         reviewCount: 189,
-        avatarUrl: '/fuel friend.png',
+        avatarUrl: '/fuel-friend-avatar.svg',
         location: '0.6 miles away',
         rate: 7.99,
         phone: '+12125551237'

@@ -4,6 +4,7 @@ import { ArrowLeft, MapPin, Star } from 'lucide-react';
 import { apiGetFuelFriendDetails, apiGetFuelFriendReviews, apiAddReview } from '../services/api';
 import { useAppContext } from '../context/AppContext';
 import AnimatedPage from '../components/AnimatedPage';
+import FuelFriendAvatar, { DEFAULT_FUEL_FRIEND_AVATAR } from '../components/FuelFriendAvatar';
 import TapEffectButton from '../components/TapEffectButton';
 
 const formatTimeAgo = (dateString: string): string => {
@@ -316,13 +317,12 @@ const FuelFriendDetailsScreen = () => {
         {/* Profile Section */}
         <div className="px-4 py-6 text-center">
           <div className="relative inline-block mb-4">
-            <img
-              src={fuelFriend.profilePhoto || '/fuel-friend-avatar.svg'}
+            <FuelFriendAvatar
+              src={fuelFriend.profilePhoto || DEFAULT_FUEL_FRIEND_AVATAR}
               alt={fuelFriend.fullName}
-              className="w-24 h-24 rounded-full object-cover mx-auto ring-2 ring-[#3AC36C]/20"
-              onError={(e) => {
-                e.currentTarget.src = '/fuel-friend-avatar.svg';
-              }}
+              sizeClassName="w-24 h-24"
+              className="mx-auto ring-[#3AC36C]/20"
+              eager
             />
             <div className="absolute bottom-1 right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white"></div>
           </div>

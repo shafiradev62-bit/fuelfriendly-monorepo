@@ -90,7 +90,7 @@ const PaymentScreen = () => {
         selectedFuelFriend: selectedFuelFriend || {
             id: 'default-friend',
             name: 'Fuel Friend',
-            avatarUrl: '/fuel friend.png'
+            avatarUrl: '/fuel-friend-avatar.svg'
         },
         breakdown: breakdown || {
             fuelCost: 32.90,
