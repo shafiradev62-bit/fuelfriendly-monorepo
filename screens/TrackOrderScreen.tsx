@@ -7,12 +7,14 @@ import { apiGetOrders, apiGetOrderDetail, apiGetRouteDirections } from '../servi
 import AnimatedPage from '../components/AnimatedPage';
 import CallModal from '../components/CallModal';
 import ChatModal from '../components/ChatModal';
-import QRCodeModal from '../components/QRCodeModal';
+import QRScannerModal from '../components/QRScannerModal';
 import TapEffectButton from '../components/TapEffectButton';
 import MobileButton from '../components/MobileButton';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import '../styles/timeline-animations.css';
+import { toast } from 'sonner';
+import { buildReceiptData, openReceiptPdfInNewTab, saveReceiptForUser } from '../utils/receiptPdf';
 
 // Set Mapbox access token
 mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN || '';
@@ -23,7 +25,7 @@ const getJawgStyle = () => ({
   sources: {
     jawg: {
       type: 'raster',
-      tiles: [`https://tile.jawg.io/jawg-light/{z}/{x}/{y}.png?access-token=${jawgToken}`],
+      tiles: [`https://tile.jawg.io/jawg-streets/{z}/{x}/{y}.png?access-token=${jawgToken}`],
       tileSize: 256
     }
   },
@@ -34,8 +36,8 @@ const getJawgStyle = () => ({
       source: 'jawg'
     }
   ],
-  glyphs: "mapbox://fonts/mapbox/{fontstack}/{range}.pbf",
-  sprite: "mapbox://sprites/mapbox/streets-v11"
+  glyphs: "https://fonts.jawg.io/{fontstack}/{range}.pbf?access-token=${jawgToken}",
+  sprite: `https://sprite.jawg.io/jawg-streets?access-token=${jawgToken}`
 });
 
 // Fallback route coordinates
@@ -308,8 +310,9 @@ const TrackOrderScreen = () => {
   // Restore missing states
   const [showCallModal, setShowCallModal] = useState(false);
   const [showChatModal, setShowChatModal] = useState(false);
-  const [showQRModal, setShowQRModal] = useState(false);
+  const [showQRScannerModal, setShowQRScannerModal] = useState(false);
   const [showDeliveredModal, setShowDeliveredModal] = useState(false);
+  const receiptHandledRef = useRef(false);
   
   // Debug logging
   console.log('TrackOrderScreen render - showChatModal:', showChatModal, 'showCallModal:', showCallModal);
@@ -357,7 +360,7 @@ const TrackOrderScreen = () => {
         name: fuelFriendName,
         location: currentOrderData.fuelfriend.location || currentOrderData.deliveryAddress || 'Waiting for pickup',
         phone: currentOrderData.fuelfriend.phone || getRandomRealPhoneNumber(isUK),
-        avatar: currentOrderData.fuelfriend.avatar || '/fuel friend.png'
+        avatar: '/fuel friend.png' // Always use stable avatar, prevent flickering
       };
     }
 
@@ -399,6 +402,45 @@ const TrackOrderScreen = () => {
   // Get the order data (prioritize lastOrderData for guest tracking after payment)
   const currentOrder = order || lastOrderData || selectedOrder;
   const driverData = getDriverData(currentOrder);
+
+  const completeOrderWithReceipt = (baseOrder: any) => {
+    if (!baseOrder || receiptHandledRef.current) {
+      setTimeout(() => setShowDeliveredModal(true), 500);
+      return;
+    }
+    receiptHandledRef.current = true;
+    const deliveredOrder = { ...baseOrder, status: 'delivered' };
+    setOrder(deliveredOrder);
+    sessionStorage.setItem('lastOrder', JSON.stringify(deliveredOrder));
+    const receiptData = buildReceiptData(deliveredOrder, {
+      name: driverData.name,
+      phone: driverData.phone
+    });
+    const currentUser = user || JSON.parse(localStorage.getItem('user') || '{}');
+    if (currentUser?.id) {
+      saveReceiptForUser(currentUser.id, receiptData);
+    }
+    toast.success('Tracking completed, receipt PDF opened');
+    openReceiptPdfInNewTab(receiptData);
+    setTimeout(() => setShowDeliveredModal(true), 500);
+  };
+
+  const handleStationQrScanned = (decodedText: string) => {
+    const trackingNumber = String(currentOrder?.trackingNumber || '').trim();
+    const scanned = String(decodedText || '').trim();
+    const isMatch =
+      !!trackingNumber &&
+      (scanned.includes(trackingNumber) ||
+        scanned.toLowerCase().includes(`order:${trackingNumber.toLowerCase()}`) ||
+        scanned.toLowerCase().includes(`tracking:${trackingNumber.toLowerCase()}`));
+    if (!isMatch) {
+      toast.error('QR does not match this order');
+      return;
+    }
+    setShowQRScannerModal(false);
+    toast.success('QR valid, completing order...');
+    completeOrderWithReceipt(currentOrder);
+  };
 
   // Debug log for troubleshooting navigation issues
   useEffect(() => {
@@ -527,10 +569,21 @@ const TrackOrderScreen = () => {
 
         // If no order found, set loading to false to show appropriate screen
         console.log('🔍 No order data found, showing appropriate screen');
+        
+        // Generate dynamic tracking number based on current date (FF + YYYYMMDDHHMMSS)
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        const hours = String(now.getHours()).padStart(2, '0');
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+        const seconds = String(now.getSeconds()).padStart(2, '0');
+        const dynamicTrackingNumber = `FF-${year}${month}${day}${hours}${minutes}${seconds}`;
+        
         // Set a default order to prevent blank screen
         setOrder({
           id: 'default-order',
-          trackingNumber: 'FF-123456',
+          trackingNumber: dynamicTrackingNumber,
           status: 'on_the_way',
           deliveryAddress: defaultLocation,
           fuelfriend: {
@@ -616,7 +669,7 @@ const TrackOrderScreen = () => {
 
         map.current.on('style.error', (e) => {
           console.error('❌ Map style error:', e);
-          setMapLoaded(true); // Show content even if style fails
+        setMapLoaded(true); // Show content even if style fails
         });
 
         map.current.on('load', () => {
@@ -727,7 +780,7 @@ const TrackOrderScreen = () => {
               'line-cap': 'round'
             },
             paint: {
-              'line-color': '#6B7280',
+              'line-color': '#3AC36C',
               'line-width': 8, // Thicker line like screenshot
               'line-opacity': 0.9
             }
@@ -799,36 +852,31 @@ const TrackOrderScreen = () => {
         // Create lightweight Jawg.io style car marker with navigation icon
         const carMarker = document.createElement('div');
         carMarker.className = 'car-marker';
-        carMarker.style.cssText = 'position: relative; width: 36px; height: 36px;';
-        carMarker.innerHTML = `
-          <div style="
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 50;
-          ">
-            <div style="
-                width: 100%; 
-                height: 100%; 
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                position: relative;
-                will-change: transform;
-            " class="car-rotate-container">
-                <svg width="36" height="36" viewBox="0 0 50 50" style="display: block;">
-                  <circle cx="25" cy="25" r="18" fill="#6B7280" />
-                  <path d="M 25 12 L 30 28 L 25 25 L 20 28 Z" fill="#6B7280" stroke="#4B5563" stroke-width="1"/>
-                  <circle cx="25" cy="25" r="3" fill="#6B7280" />
-                </svg>
-            </div>
-          </div>
-        `;
+        carMarker.style.cssText = 'position: relative; width: 48px; height: 48px; filter: drop-shadow(0 4px 8px rgba(58, 195, 108, 0.4));';
+               
+        // Alternate between two car PNGs
+       const carImages= ['/mobil tracking.png', '/mobil tracking 1.png'];
+       const randomCarImage = carImages[Math.floor(Math.random() * carImages.length)];
+               
+       carMarker.innerHTML = `
+         <div style="
+           position: absolute;
+           top: 0;
+           left: 0;
+           width: 100%;
+           height: 100%;
+           display: flex;
+           align-items: center;
+           justify-content: center;
+           z-index: 50;
+         ">
+           <img src="${randomCarImage}" alt="Tracking Car" style="
+             width: 100%;
+             height: 100%;
+             object-fit: contain;
+           " />
+         </div>
+       `;
 
         const marker = new mapboxgl.Marker({
           element: carMarker,
@@ -947,7 +995,7 @@ const TrackOrderScreen = () => {
               
               currentHeading = bearing;
               
-              const rotateContainer = carMarker.querySelector('.car-rotate-container') as HTMLElement;
+              const rotateContainer = carMarker.querySelector('img') as HTMLElement;
               if (rotateContainer) {
                 // Apply smooth rotation with CSS transition
                 rotateContainer.style.transition = 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
@@ -958,29 +1006,7 @@ const TrackOrderScreen = () => {
             } else {
               // ARRIVED
               console.log('🎉 Car arrived at destination!');
-              if (currentOrder) {
-                currentOrder.status = 'delivered';
-                setOrder({ ...currentOrder, status: 'delivered' });
-                
-                // Save receipt
-                const receiptData = {
-                  ...currentOrder,
-                  driverName: driverData.name,
-                  driverPhone: driverData.phone,
-                  createdAt: new Date().toISOString(),
-                  totalAmount: currentOrder.fuelCost + (currentOrder.serviceFee || 0) + 
-                    (currentOrder.cartItems?.reduce((sum, item) => sum + (item.price * item.quantity), 0) || 0)
-                };
-                
-                // Save to localStorage
-                const user = JSON.parse(localStorage.getItem('user') || '{}');
-                if (user.id) {
-                  const existingReceipts = JSON.parse(localStorage.getItem(`userReceipts_${user.id}`) || '[]');
-                  existingReceipts.unshift(receiptData);
-                  localStorage.setItem(`userReceipts_${user.id}`, JSON.stringify(existingReceipts));
-                }
-              }
-              setTimeout(() => setShowDeliveredModal(true), 500);
+              completeOrderWithReceipt(currentOrder);
             }
           };
 
@@ -1079,7 +1105,7 @@ const TrackOrderScreen = () => {
           'line-cap': 'round'
         },
         paint: {
-          'line-color': '#6B7280',
+          'line-color': '#3AC36C',
           'line-width': 6
         }
       });
@@ -1087,38 +1113,32 @@ const TrackOrderScreen = () => {
 
   // Add lightweight Jawg.io style car marker for fallback route
     const carMarker = document.createElement('div');
-    carMarker.className = 'car-marker';
-    carMarker.style.cssText = 'position: relative; width: 36px; height: 36px;';
-    carMarker.innerHTML = `
-      <div style="
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        z-index: 50;
-      ">
-        <div class="car-rotate-container" style="
-            width: 100%; 
-            height: 100%; 
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-            will-change: transform;
-        ">
-            <svg width="36" height="36" viewBox="0 0 50 50" style="display: block;">
-              <circle cx="25" cy="25" r="18" fill="#6B7280" />
-              <circle cx="25" cy="25" r="15" fill="white" />
-              <path d="M 25 12 L 30 28 L 25 25 L 20 28 Z" fill="#6B7280" stroke="#4B5563" stroke-width="1"/>
-              <circle cx="25" cy="25" r="3" fill="#6B7280" />
-            </svg>
-        </div>
-      </div>
-    `;
+    carMarker.className= 'car-marker';
+    carMarker.style.cssText = 'position: relative; width: 48px; height: 48px; filter: drop-shadow(0 4px 8px rgba(58, 195, 108, 0.4));';
+      
+    // Alternate between two car PNGs
+   const carImages= ['/mobil tracking.png', '/mobil tracking 1.png'];
+   const randomCarImage = carImages[Math.floor(Math.random() * carImages.length)];
+      
+   carMarker.innerHTML = `
+     <div style="
+       position: absolute;
+       top: 0;
+       left: 0;
+       width: 100%;
+       height: 100%;
+       display: flex;
+       align-items: center;
+       justify-content: center;
+       z-index: 50;
+     ">
+       <img src="${randomCarImage}" alt="Tracking Car" style="
+         width: 100%;
+         height: 100%;
+         object-fit: contain;
+       " />
+     </div>
+   `;
 
     const marker = new mapboxgl.Marker({
       element: carMarker,
@@ -1168,7 +1188,7 @@ const TrackOrderScreen = () => {
         lastBearing = bearing;
         
         // Apply rotation to the container inside the marker
-        const rotateContainer = carMarker.querySelector('.car-rotate-container') as HTMLElement;
+        const rotateContainer = carMarker.querySelector('img') as HTMLElement;
         if (rotateContainer) {
           rotateContainer.style.transition = 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
           rotateContainer.style.transform = `rotate(${bearing}deg)`;
@@ -1182,11 +1202,7 @@ const TrackOrderScreen = () => {
       } else {
         // Arrived
         console.log('🎉 Car arrived (fallback)!');
-        if (currentOrder) {
-          currentOrder.status = 'delivered';
-          setOrder({ ...currentOrder, status: 'delivered' });
-        }
-        setTimeout(() => setShowDeliveredModal(true), 500);
+        completeOrderWithReceipt(currentOrder);
       }
     };
 
@@ -1275,9 +1291,6 @@ const TrackOrderScreen = () => {
             <div className="text-center">
               <div className="w-8 h-8 border-4 border-gray-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
               <p className="text-gray-600 font-medium">Preparing Tracking...</p>
-              {showTimeoutError && (
-                <p className="text-red-500 text-sm mt-2 animate-pulse">Connection slow, retrying...</p>
-              )}
             </div>
           </div>
         </div>
@@ -1296,7 +1309,7 @@ const TrackOrderScreen = () => {
         <p className="text-gray-600 mb-8">We couldn't find an active order to track right now.</p>
         <button
           onClick={() => navigate('/home')}
-          className="w-full max-w-xs py-4 bg-gray-500 text-white rounded-full font-bold shadow-lg"
+          className="w-full max-w-xs py-4 bg-[#3AC36C] text-white rounded-full font-bold shadow-lg hover:bg-[#2da85a] transition-all active:scale-95"
         >
           Go Back Home
         </button>
@@ -1356,16 +1369,7 @@ const TrackOrderScreen = () => {
       easing: 'easeOutElastic(1, .7)'
     });
 
-    // Animate timeline icons with flip effect
-    anime({
-      targets: '.timeline-icon',
-      scale: [0, 1.3, 1],
-      rotate: [360, 0],
-      opacity: [0, 1],
-      duration: 800,
-      delay: anime.stagger(200, {start: 1000}),
-      easing: 'easeOutElastic(1, .6)'
-    });
+
 
     // Animate order details with slide and fade
     anime({
@@ -1566,7 +1570,7 @@ const TrackOrderScreen = () => {
                       console.log('Message button clicked!');
                       setShowChatModal(true);
                     }}
-                    className="action-button p-3 bg-gray-500 rounded-full w-12 h-12 flex items-center justify-center shadow-md hover:bg-gray-600 transition-all active:scale-95 touch-manipulation"
+                    className="action-button p-3 bg-[#3AC36C] rounded-full w-12 h-12 flex items-center justify-center shadow-md hover:bg-[#2da85a] transition-all active:scale-95 touch-manipulation"
                     aria-label="Message Agent"
                   >
                     <MessageCircle className="w-6 h-6 text-white" />
@@ -1582,7 +1586,7 @@ const TrackOrderScreen = () => {
                       });
                       setShowCallModal(true);
                     }}
-                    className="action-button p-3 bg-gray-500 rounded-full w-12 h-12 flex items-center justify-center shadow-md hover:bg-gray-600 transition-all active:scale-95 touch-manipulation"
+                    className="action-button p-3 bg-[#3AC36C] rounded-full w-12 h-12 flex items-center justify-center shadow-md hover:bg-[#2da85a] transition-all active:scale-95 touch-manipulation"
                     aria-label="Call Agent"
                   >
                     <Phone className="w-6 h-6 text-white" />
@@ -1596,10 +1600,10 @@ const TrackOrderScreen = () => {
                         duration: 300,
                         easing: 'easeInOutQuad'
                       });
-                      setShowQRModal(true);
+                      setShowQRScannerModal(true);
                     }}
-                    className="action-button p-3 bg-gray-500 rounded-full w-12 h-12 flex items-center justify-center shadow-md hover:bg-gray-600 transition-all active:scale-95 touch-manipulation"
-                    aria-label="Show QR Code"
+                    className="action-button p-3 bg-[#3AC36C] rounded-full w-12 h-12 flex items-center justify-center shadow-md hover:bg-[#2da85a] transition-all active:scale-95 touch-manipulation"
+                    aria-label="Scan QR Code"
                   >
                     <QrCode className="w-6 h-6 text-white" />
                   </button>
@@ -1613,79 +1617,39 @@ const TrackOrderScreen = () => {
                   {String(currentOrder?.deliveryTime || 'Estimated 15-20 mins').replace(/delivery/gi, 'pickup').replace(/deliver/gi, 'pickup')}
                 </p>
 
-                {/* Horizontal Timeline with PNG Icons (Exact Screenshot Design) */}
-                <div className="flex items-center justify-between px-2 py-4 relative">
-                  {/* Person Icon (Start) - Always Green */}
-                  <div className="timeline-icon flex flex-col items-center relative z-10">
-                    <img 
-                      src="/orang icon.png" 
-                      alt="User" 
-                      className="w-10 h-10 object-contain"
-                      onError={(e) => {
-                        e.currentTarget.style.display = 'none';
-                        const parent = e.currentTarget.parentElement;
-                        if (parent) {
-                          parent.innerHTML = '<div class="w-10 h-10 bg-gray-500 rounded-full flex items-center justify-center text-white text-xl">👤</div>';
-                        }
-                      }}
-                    />
-                  </div>
-
-                  {/* Dotted Line 1 - Gray */}
-                  <div className="flex-1 border-t-2 border-dashed border-gray-500 mx-2"></div>
-
-                  {/* Car Icon (On the way) - Always Green */}
-                  <div className="timeline-icon flex flex-col items-center relative z-10">
-                    <img 
-                      src="/mobil icon.png" 
-                      alt="Car" 
-                      className="w-10 h-10 object-contain"
-                      onError={(e) => {
-                        e.currentTarget.style.display = 'none';
-                        const parent = e.currentTarget.parentElement;
-                        if (parent) {
-                          parent.innerHTML = '<div class="w-10 h-10 bg-gray-500 rounded-full flex items-center justify-center text-white text-xl">🚗</div>';
-                        }
-                      }}
-                    />
-                  </div>
-
-                  {/* Dotted Line 2 - Gray */}
-                  <div className="flex-1 border-t-2 border-dashed border-gray-300 mx-2"></div>
-
-                  {/* Fuel Pump Icon - Gray */}
-                  <div className="timeline-icon flex flex-col items-center relative z-10">
-                    <img 
-                      src="/isi icon.png" 
-                      alt="Fuel" 
-                      className="w-10 h-10 object-contain"
-                      onError={(e) => {
-                        e.currentTarget.style.display = 'none';
-                        const parent = e.currentTarget.parentElement;
-                        if (parent) {
-                          parent.innerHTML = '<div class="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center text-white text-xl">⛽</div>';
-                        }
-                      }}
-                    />
-                  </div>
-
-                  {/* Dotted Line 3 - Gray */}
-                  <div className="flex-1 border-t-2 border-dashed border-gray-300 mx-2"></div>
-
-                  {/* Done Icon (Completed) - Gray */}
-                  <div className="timeline-icon flex flex-col items-center relative z-10">
-                    <img 
-                      src="/done icon.png" 
-                      alt="Done" 
-                      className="w-10 h-10 object-contain"
-                      onError={(e) => {
-                        e.currentTarget.style.display = 'none';
-                        const parent = e.currentTarget.parentElement;
-                        if (parent) {
-                          parent.innerHTML = '<div class="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center text-white text-xl">✓</div>';
-                        }
-                      }}
-                    />
+                {/* Clean Progress Bar (No Icons) */}
+                <div className="relative py-4">
+                  {/* Progress Track */}
+                  <div className="absolute top-1/2 left-0 right-0 h-2 bg-gray-200 rounded-full transform -translate-y-1/2"></div>
+                  
+                  {/* Active Progress */}
+                  <div 
+                    className="absolute top-1/2 left-0 h-2 bg-green-500 rounded-full transform -translate-y-1/2 transition-all duration-500"
+                    style={{ 
+                      width: currentOrder?.status === 'completed' || currentOrder?.status === 'delivered' ? '100%' :
+                             currentOrder?.status === 'on_the_way' ? '66%' :
+                             currentOrder?.status === 'preparing' ? '33%' : '0%'
+                    }}
+                  ></div>
+                  
+                  {/* Status Indicators (Dots Only, No Icons) */}
+                  <div className="relative flex items-center justify-between">
+                    {/* Start Point */}
+                    <div className="w-4 h-4 bg-green-500 rounded-full border-2 border-white shadow"></div>
+                    
+                    {/* Middle Point */}
+                    <div className={`w-4 h-4 rounded-full border-2 shadow ${
+                      currentOrder?.status === 'on_the_way' || currentOrder?.status === 'preparing' 
+                        ? 'bg-green-500 border-white' 
+                        : 'bg-gray-300 border-gray-200'
+                    }`}></div>
+                    
+                    {/* End Point */}
+                    <div className={`w-4 h-4 rounded-full border-2 shadow ${
+                      currentOrder?.status === 'completed' || currentOrder?.status === 'delivered'
+                        ? 'bg-green-500 border-white' 
+                        : 'bg-gray-300 border-gray-200'
+                    }`}></div>
                   </div>
                 </div>
               </div>
@@ -1795,7 +1759,7 @@ const TrackOrderScreen = () => {
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-gray-600">Total Amount</span>
                   <span className="text-sm font-bold text-gray-600">
-                    {currentOrder?.currency || '$'}{currentOrder?.grandTotal || currentOrder?.totalAmount || '0.00'}
+                    {currentOrder?.currency || '$'}{(parseFloat(currentOrder?.grandTotal || currentOrder?.totalAmount) || 0).toFixed(2)}
                   </span>
                 </div>
               </div>
@@ -1807,7 +1771,7 @@ const TrackOrderScreen = () => {
                     setShowDeliveredModal(false);
                     navigate('/home');
                   }}
-                  className="w-full py-3 bg-gray-500 text-white rounded-full font-semibold hover:bg-gray-600 transition-all duration-200"
+                  className="w-full py-3 bg-[#3AC36C] text-white rounded-full font-semibold hover:bg-[#2da85a] transition-all duration-200"
                 >
                   Back to Home
                 </button>
@@ -1836,22 +1800,20 @@ const TrackOrderScreen = () => {
           driverPhone={driverData.phone || '+1234567890'}
           onCall={() => {
             setShowChatModal(false);
-            // Show in-app calling screen
+            // Navigate to in-app calling screen
             const userCity = (user?.city || '').toLowerCase();
             const isUK = userCity.includes('london') || userCity.includes('uk') || userCity.includes('england');
             const fallbackPhone = getRandomRealPhoneNumber(isUK);
-            alert(`Calling ${driverData.name} at ${driverData.phone || fallbackPhone}`);
+            navigate(`/call/${driverData.name}/${orderId}`);
           }}
         />
       )}
 
-      {/* QR Code Modal */}
-      {showQRModal && (
-        <QRCodeModal
-          isOpen={showQRModal}
-          onClose={() => setShowQRModal(false)}
-          trackingNumber={currentOrder?.trackingNumber || 'FF-123456'}
-          orderData={currentOrder}
+      {showQRScannerModal && (
+        <QRScannerModal
+          isOpen={showQRScannerModal}
+          onClose={() => setShowQRScannerModal(false)}
+          onScanSuccess={handleStationQrScanned}
         />
       )}
     </>

@@ -5,6 +5,7 @@ import { useAppContext } from '../context/AppContext';
 import AnimatedPage from '../components/AnimatedPage';
 import TapEffectButton from '../components/TapEffectButton';
 import Receipt from '../components/Receipt';
+import { downloadReceiptPdf } from '../utils/receiptPdf';
 
 const ReceiptsScreen = () => {
   const navigate = useNavigate();
@@ -37,14 +38,7 @@ const ReceiptsScreen = () => {
   };
 
   const handleDownload = (receipt: any) => {
-    // Simulate PDF download
-    const element = document.createElement('a');
-    const file = new Blob([generateReceiptText(receipt)], { type: 'text/plain' });
-    element.href = URL.createObjectURL(file);
-    element.download = `receipt_${receipt.trackingNumber}.txt`;
-    document.body.appendChild(element);
-    element.click();
-    document.body.removeChild(element);
+    downloadReceiptPdf(receipt);
   };
 
   const handlePrint = (receipt: any) => {
@@ -177,61 +171,81 @@ Thank you for choosing FuelFriendly!
 
   return (
     <AnimatedPage>
-      <div className="min-h-screen bg-white">
-        <div className="flex items-center p-4 border-b border-gray-200">
-          <TapEffectButton 
-            onClick={() => navigate('/home')}
-            className="p-2 -ml-2"
-          >
-            <ArrowLeft className="w-5 h-5 text-gray-600" />
-          </TapEffectButton>
-          <h1 className="text-lg font-semibold text-gray-900 flex-1 text-center -ml-10">My Receipts</h1>
+      <div className="min-h-screen bg-gray-50">
+        {/* iOS-style Header */}
+        <div className="bg-white border-b border-gray-100 sticky top-0 z-10">
+          <div className="flex items-center p-4">
+            <TapEffectButton 
+              onClick={() => navigate('/home')}
+              className="p-2 -ml-2 hover:bg-gray-100 rounded-full transition-colors"
+            >
+              <ArrowLeft className="w-5 h-5 text-gray-900" />
+            </TapEffectButton>
+            <h1 className="text-lg font-bold text-gray-900 flex-1 text-center -ml-10">My Receipts</h1>
+            <div className="w-9"></div> {/* Spacer for centering */}
+          </div>
         </div>
 
         <div className="p-4">
           {receipts.length === 0 ? (
-            <div className="text-center py-12">
-              <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                <FileText className="w-12 h-12 text-gray-400" />
+            <div className="text-center py-16 animate-fade-in">
+              <div className="w-28 h-28 bg-gradient-to-br from-gray-100 to-gray-50 rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm">
+                <FileText className="w-14 h-14 text-gray-300" strokeWidth={1.5} />
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">No Receipts Yet</h3>
-              <p className="text-gray-600 mb-6">Your receipts will appear here after completing orders.</p>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">No Receipts Yet</h3>
+              <p className="text-gray-500 mb-8 max-w-xs mx-auto">
+                Your receipts will appear here after completing orders.
+              </p>
               <button
                 onClick={() => navigate('/home')}
-                className="bg-[#3AC36C] text-white px-6 py-3 rounded-full font-semibold hover:bg-[#2ea85a] transition-colors"
+                className="bg-[#3AC36C] text-white px-8 py-4 rounded-2xl font-semibold hover:bg-[#2ea85a] transition-all duration-200 shadow-lg hover:shadow-xl active:scale-[0.98]"
               >
                 Start Ordering
               </button>
             </div>
           ) : (
-            <div className="space-y-4">
-              {receipts.map((receipt) => (
+            <div className="space-y-3">
+              {receipts.map((receipt, index) => (
                 <div 
                   key={receipt.id}
                   onClick={() => {
                     setSelectedReceipt(receipt);
                     setShowReceiptModal(true);
                   }}
-                  className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+                  className={`bg-white rounded-2xl p-5 shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer active:scale-[0.98] border border-gray-100 animate-slide-in-up stagger-${Math.min(index + 1, 8)}`}
                 >
-                  <div className="flex justify-between items-start mb-3">
-                    <div>
-                      <h3 className="font-semibold text-gray-900">Order #{receipt.trackingNumber}</h3>
-                      <p className="text-sm text-gray-600">
-                        {new Date(receipt.createdAt).toLocaleDateString()}
+                  <div className="flex justify-between items-start mb-4">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                        <h3 className="font-bold text-gray-900">Order #{receipt.trackingNumber}</h3>
+                      </div>
+                      <p className="text-sm text-gray-500 font-medium">
+                        {new Date(receipt.createdAt).toLocaleDateString('en-US', {
+                          month: 'short',
+                          day: 'numeric',
+                          year: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}
                       </p>
                     </div>
                     <div className="text-right">
-                      <p className="font-bold text-green-600">
+                      <p className="text-2xl font-bold text-[#3AC36C]">
                         {receipt.currency}{receipt.totalAmount.toFixed(2)}
                       </p>
-                      <p className="text-xs text-gray-500">Total</p>
+                      <p className="text-xs text-gray-400 font-medium">Total Amount</p>
                     </div>
                   </div>
                   
-                  <div className="flex justify-between items-center text-sm text-gray-600">
-                    <span>{receipt.stationName}</span>
+                  <div className="flex items-center justify-between pt-3 border-t border-gray-100">
                     <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
+                        <FileText className="w-4 h-4 text-gray-600" />
+                      </div>
+                      <span className="text-sm font-medium text-gray-700">{receipt.stationName}</span>
+                    </div>
+                    <div className="flex items-center gap-3 text-gray-400">
                       <Download className="w-4 h-4" />
                       <Printer className="w-4 h-4" />
                     </div>

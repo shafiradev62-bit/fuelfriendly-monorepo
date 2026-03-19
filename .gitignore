@@ -50,3 +50,13 @@ android/build_log.txt
 # Temporary folders
 tmp/
 temp/
+
+# Codex Cloud
+.codex/secrets.json
+.codex/*.key
+.codex/private/*
+
+# TestFlight artifacts
+*.xcarchive
+*.ipa
+build/App.xcarchive/

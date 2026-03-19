@@ -1,12 +1,12 @@
 // Firebase configuration
 export const firebaseConfig = {
-  apiKey: "AIzaSyAojjt6CTISq8kWYdifAAjJAnYxIAPsv0E",
-  authDomain: "fuelflow-asi.firebaseapp.com",
-  projectId: "fuelflow-asi",
-  storageBucket: "fuelflow-asi.firebasestorage.app",
-  messagingSenderId: "292700372185",
-  appId: "1:292700372185:web:17b8e2f7e063a73a7652c8",
-  measurementId: "G-7C0MM7R9MS"
+  apiKey: "AIzaSyCDY_Pz2vy1pozUjz05xCHeSaH1vNlvr1I",
+  authDomain: "fuelfriendly-100fb.firebaseapp.com",
+  projectId: "fuelfriendly-100fb",
+  storageBucket: "fuelfriendly-100fb.firebasestorage.app",
+  messagingSenderId: "453013100259",
+  appId: "1:453013100259:android:4f8d581bc58af465e397d6",
+  measurementId: "G-LXLD6BZNDK"
 };
 
 // Google Client ID for authentication

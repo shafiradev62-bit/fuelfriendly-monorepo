@@ -32,7 +32,7 @@ const CallModal: React.FC<CallModalProps> = ({ isOpen, onClose, phoneNumber, dri
     <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-[9999] p-4">
       <div className="bg-white rounded-2xl p-6 w-full max-w-sm">
         <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-semibold text-gray-900">Call Driver</h3>
+          <h3 className="text-lg font-semibold text-gray-900">Call FuelFriend</h3>
           <button 
             onClick={onClose}
             className="p-2 hover:bg-gray-100 rounded-full transition-colors"

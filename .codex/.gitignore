@@ -1,0 +1,9 @@
+# Keep all secrets private
+secrets.json
+*.key
+*.pem
+private/
+
+# Local development files
+.env.local
+*.local

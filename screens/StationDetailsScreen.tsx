@@ -510,7 +510,7 @@ const StationDetailsScreen = () => {
               name: 'James Mitchell',
               rating: 4.8,
               reviewCount: 156,
-              avatarUrl: '/fuel friend.png',
+              avatarUrl: '/fuel-friend-avatar.svg',
               location: '0.5 miles away',
               rate: 4.99,
               phone: '+447712345678'
@@ -520,7 +520,7 @@ const StationDetailsScreen = () => {
               name: 'Emma Thompson',
               rating: 4.9,
               reviewCount: 203,
-              avatarUrl: '/fuel friend.png',
+              avatarUrl: '/fuel-friend-avatar.svg',
               location: '0.3 miles away',
               rate: 5.49,
               phone: '+447712345679'
@@ -533,7 +533,7 @@ const StationDetailsScreen = () => {
               name: 'David Johnson',
               rating: 4.8,
               reviewCount: 156,
-              avatarUrl: '/fuel friend.png',
+              avatarUrl: '/fuel-friend-avatar.svg',
               location: '0.5 miles away',
               rate: 5.99,
               phone: '+12125551234'
@@ -543,7 +543,7 @@ const StationDetailsScreen = () => {
               name: 'Jennifer Smith',
               rating: 4.9,
               reviewCount: 203,
-              avatarUrl: '/fuel friend.png',
+              avatarUrl: '/fuel-friend-avatar.svg',
               location: '0.3 miles away',
               rate: 6.99,
               phone: '+12125551235'
@@ -579,68 +579,43 @@ const StationDetailsScreen = () => {
           // Ensure station from HomeScreen has groceries and fuel friends
           const stationFromHome = location.state.station;
           if (!stationFromHome.groceries || stationFromHome.groceries.length === 0) {
-            stationFromHome.groceries = [
-              {
-                id: 'grocery-1',
-                name: 'Bottled Water',
-                price: 2.50,
-                description: 'Pure drinking water'
-              },
-              {
-                id: 'grocery-2',
-                name: 'Energy Drink',
-                price: 3.99,
-                description: 'Refreshing energy boost'
-              },
-              {
-                id: 'grocery-3',
-                name: 'Potato Chips',
-                price: 4.99,
-                description: 'Crispy potato chips'
-              },
-              {
-                id: 'grocery-4',
-                name: 'Coffee',
-                price: 5.99,
-                description: 'Hot coffee'
-              },
-              {
-                id: 'grocery-5',
-                name: 'Fresh Sandwich',
-                price: 7.99,
-                description: 'Fresh sandwich with ingredients'
-              },
-              {
-                id: 'grocery-6',
-                name: 'Chocolate Bar',
-                price: 2.99,
-                description: 'Chocolate treat'
-              },
-              {
-                id: 'grocery-7',
-                name: 'Fresh Milk',
-                price: 4.25,
-                description: 'Whole milk, 1 gallon'
-              },
-              {
-                id: 'grocery-8',
-                name: 'Bread Loaf',
-                price: 3.49,
-                description: 'Fresh baked bread'
-              },
-              {
-                id: 'grocery-9',
-                name: 'Fresh Eggs',
-                price: 5.99,
-                description: 'Large eggs, 12-pack'
-              },
-              {
-                id: 'grocery-10',
-                name: 'Apple',
-                price: 0.99,
-                description: 'Fresh red apple'
-              }
+            // Diverse grocery selection based on station type (like real AWS API data)
+            const isUKStation = stationFromHome?.address?.toLowerCase().includes('uk') ||
+              stationFromHome?.address?.toLowerCase().includes('london');
+            
+            // Different grocery assortments for different stations (realistic variety)
+            const groceryAssortments = [
+              // Convenience Store Assortment
+              [
+                { id: `groc-${Date.now()}-1`, name: 'Bottled Water', price: isUKStation ? 1.20 : 2.50, description: 'Pure drinking water 500ml' },
+                { id: `groc-${Date.now()}-2`, name: 'Energy Drink', price: isUKStation ? 2.50 : 3.99, description: 'Red Bull or Monster' },
+                { id: `groc-${Date.now()}-3`, name: 'Potato Chips', price: isUKStation ? 1.80 : 4.99, description: 'Walkers/Lays crisps' },
+                { id: `groc-${Date.now()}-4`, name: 'Coffee', price: isUKStation ? 3.20 : 5.99, description: 'Barista hot coffee' },
+                { id: `groc-${Date.now()}-5`, name: 'Fresh Sandwich', price: isUKStation ? 4.50 : 7.99, description: 'Made fresh daily' },
+                { id: `groc-${Date.now()}-6`, name: 'Chocolate Bar', price: isUKStation ? 1.20 : 2.99, description: 'Cadbury/Snickers' }
+              ],
+              // Grocery Store Assortment
+              [
+                { id: `groc-${Date.now()}-7`, name: 'Fresh Milk', price: isUKStation ? 1.10 : 4.25, description: 'Whole milk 1 gallon/4 pint' },
+                { id: `groc-${Date.now()}-8`, name: 'Bread Loaf', price: isUKStation ? 1.20 : 3.49, description: 'Fresh baked white/brown' },
+                { id: `groc-${Date.now()}-9`, name: 'Fresh Eggs', price: isUKStation ? 2.80 : 5.99, description: 'Free range 12-pack' },
+                { id: `groc-${Date.now()}-10`, name: 'Bananas', price: isUKStation ? 0.90 : 1.29, description: 'Fresh organic per lb' },
+                { id: `groc-${Date.now()}-11`, name: 'Orange Juice', price: isUKStation ? 2.50 : 4.99, description: 'Tropicana 52oz' },
+                { id: `groc-${Date.now()}-12`, name: 'Cereal Box', price: isUKStation ? 3.50 : 5.49, description: 'Kellogg\'s variety' }
+              ],
+              // Snack & Drinks Assortment
+              [
+                { id: `groc-${Date.now()}-13`, name: 'Soft Drink', price: isUKStation ? 1.50 : 2.99, description: 'Coke/Pepsi 500ml' },
+                { id: `groc-${Date.now()}-14`, name: 'Protein Bar', price: isUKStation ? 1.80 : 3.49, description: 'Quest/Grenade' },
+                { id: `groc-${Date.now()}-15`, name: 'Nuts Mix', price: isUKStation ? 2.20 : 4.99, description: 'Planters mixed nuts' },
+                { id: `groc-${Date.now()}-16`, name: 'Ice Cream', price: isUKStation ? 3.50 : 6.99, description: 'Magnum/Ben & Jerry\'s' },
+                { id: `groc-${Date.now()}-17`, name: 'Cookies Pack', price: isUKStation ? 2.80 : 4.49, description: 'Oreo/Chips Ahoy' }
+              ]
             ];
+            
+            // Select assortment based on station hash (consistent per station)
+            const assortmentIndex = stationFromHome.id.charCodeAt(0) % groceryAssortments.length;
+            stationFromHome.groceries = groceryAssortments[assortmentIndex];
           }
 
           if (!stationFromHome.fuelFriends || stationFromHome.fuelFriends.length === 0) {
@@ -649,51 +624,48 @@ const StationDetailsScreen = () => {
               stationFromHome?.address?.toLowerCase().includes('london') ||
               (stationFromHome?.lat && stationFromHome.lat > 49 && stationFromHome.lat < 60 && stationFromHome?.lon && stationFromHome.lon > -10 && stationFromHome.lon < 2);
 
-            const fallbackFuelFriends = isUKStation ? [
-              {
-                id: 'friend-uk-1',
-                name: 'James Mitchell',
-                rating: 4.8,
-                reviewCount: 156,
-                avatarUrl: '/fuel friend.png',
-                location: '0.5 miles away',
-                rate: 4.99,
-                phone: '+447712345678'
-              },
-              {
-                id: 'friend-uk-2',
-                name: 'Emma Thompson',
-                rating: 4.9,
-                reviewCount: 203,
-                avatarUrl: '/fuel friend.png',
-                location: '0.3 miles away',
-                rate: 5.49,
-                phone: '+447712345679'
-              }
-            ] : [
-              {
-                id: 'friend-us-1',
-                name: 'David Johnson',
-                rating: 4.8,
-                reviewCount: 156,
-                avatarUrl: '/fuel friend.png',
-                location: '0.5 miles away',
-                rate: 5.99,
-                phone: '+12125551234'
-              },
-              {
-                id: 'friend-us-2',
-                name: 'Jennifer Smith',
-                rating: 4.9,
-                reviewCount: 203,
-                avatarUrl: '/fuel friend.png',
-                location: '0.3 miles away',
-                rate: 6.99,
-                phone: '+12125551235'
-              }
+            // Diverse Fuel Friend names (like real AWS API - different per station)
+            const ukFuelFriends = [
+              { name: 'James Mitchell', phone: '+447712345678' },
+              { name: 'Emma Thompson', phone: '+447712345679' },
+              { name: 'Oliver Harris', phone: '+447712345680' },
+              { name: 'Sophie Anderson', phone: '+447712345681' },
+              { name: 'George Wilson', phone: '+447712345682' },
+              { name: 'Charlotte Brown', phone: '+447712345683' },
+              { name: 'Harry Taylor', phone: '+447712345684' },
+              { name: 'Amelia Davies', phone: '+447712345685' }
+            ];
+            
+            const usFuelFriends = [
+              { name: 'Michael Rodriguez', phone: '+12125551234' },
+              { name: 'Jessica Martinez', phone: '+12125551235' },
+              { name: 'Christopher Lee', phone: '+12125551236' },
+              { name: 'Amanda Garcia', phone: '+12125551237' },
+              { name: 'Daniel Thompson', phone: '+12125551238' },
+              { name: 'Ashley White', phone: '+12125551239' },
+              { name: 'Matthew Harris', phone: '+12125551240' },
+              { name: 'Sarah Clark', phone: '+12125551241' },
+              { name: 'Andrew Lewis', phone: '+12125551242' },
+              { name: 'Emily Walker', phone: '+12125551243' }
             ];
 
-            stationFromHome.fuelFriends = fallbackFuelFriends;
+            // Select different friends for different stations (deterministic based on station ID)
+            const allFriends = isUKStation ? ukFuelFriends : usFuelFriends;
+            const startIndex = stationFromHome.id.charCodeAt(0) % (allFriends.length - 1);
+            const selectedFriends = allFriends.slice(startIndex, startIndex + 2);
+            
+            stationFromHome.fuelFriends = selectedFriends.map((friend, idx) => ({
+              id: `friend-${stationFromHome.id}-${idx}`,
+              name: friend.name,
+              rating: (4.7 + Math.random() * 0.3).toFixed(1),
+              reviewCount: Math.floor(100 + Math.random() * 200),
+              avatarUrl: '/fuel-friend-avatar.svg',
+              location: `${(0.2 + Math.random() * 0.8).toFixed(1)} miles away`,
+              rate: (isUKStation ? 4.99 : 5.99) + (idx * 0.5),
+              phone: friend.phone,
+              vehicle: ['Toyota Camry', 'Honda Civic', 'Ford Focus', 'Nissan Altima'][Math.floor(Math.random() * 4)],
+              eta: Math.floor(15 + Math.random() * 20)
+            }));
           }
 
           setStation(stationFromHome);
@@ -1020,11 +992,11 @@ const StationDetailsScreen = () => {
                 <div className="flex items-center space-x-3">
                   <div className="relative">
                     <img
-                      src={selectedFuelFriend.avatarUrl || '/fuel friend.png'}
+                      src={selectedFuelFriend.avatarUrl || '/fuel-friend-avatar.svg'}
                       alt={selectedFuelFriend.name}
                       className="w-12 h-12 rounded-full object-cover"
                       onError={(e) => {
-                        e.currentTarget.src = '/fuel friend.png';
+                        e.currentTarget.src = '/fuel-friend-avatar.svg';
                       }}
                     />
                     <div className="absolute -top-1 -right-1 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">

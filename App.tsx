@@ -1,6 +1,6 @@
 import { useState, useEffect, createContext, useContext } from 'react';
 import { BrowserRouter, Routes, Route, useNavigate, useLocation } from 'react-router-dom';
-import { Toaster } from "sonner";
+import { Toaster, toast } from "sonner";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { AnimatePresence } from "framer-motion";
 import { Capacitor } from '@capacitor/core';
@@ -42,12 +42,13 @@ import PrivacyPolicyScreen from './screens/PrivacyPolicyScreen';
 import AccountDeletionScreen from './screens/AccountDeletionScreen';
 import AccountDeletedSuccessScreen from './screens/AccountDeletedSuccessScreen';
 import ChatScreen from './screens/ChatScreen';
+import CallScreen from './screens/CallScreen';
 import ReceiptsScreen from './screens/ReceiptsScreen';
 import PasswordResetSuccess from './components/PasswordResetSuccess';
 import BottomNav from './components/BottomNav';
 import { Theme, User } from './types';
 
-import { apiLogin, apiGetMe, apiGoogleAuth } from './services/api';
+import { apiLogin, apiGetMe, apiResolveGoogleUserLocal } from './services/api';
 import { AppContext, useAppContext } from './context/AppContext';
 
 const apiLogout = () => {
@@ -56,49 +57,56 @@ const apiLogout = () => {
     localStorage.removeItem('user'); // Legacy cleanup
 };
 
+// Google Auth initialization state
+let isGoogleAuthInitialized = false;
+
 // Initialize Google Auth for Capacitor (call this early in app lifecycle)
 const initializeGoogleAuth = async () => {
     if (!Capacitor.isNativePlatform()) return;
+    if (isGoogleAuthInitialized) return;
 
     try {
-        // Hardcoded client ID for Android - FuelFriendly app
-        const androidClientId = '915622810812-41c4udago6s6he0nu6euplt91hupaoil.apps.googleusercontent.com';
+        // For Capacitor Google Auth on Android, we need to use the Web Client ID
+        // This is because the plugin uses the web client ID for authentication
+        const webClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID_WEB || import.meta.env.VITE_GOOGLE_CLIENT_ID;
+        
+        if (!webClientId) {
+            throw new Error('Google Client ID not configured');
+        }
 
         await GoogleAuth.initialize({
-            clientId: androidClientId,
-            scopes: ['profile', 'email'],
-            grantOfflineAccess: true,
+            scopes: ['profile', 'email', 'openid'],
+            serverClientId: webClientId,
+            forceCodeForRefreshToken: false
         });
-        console.log('✅ Google Auth initialized for Android with client ID:', androidClientId);
+        isGoogleAuthInitialized = true;
     } catch (error) {
-        console.error('❌ Failed to initialize Google Auth:', error);
+        // Non-fatal: log and continue
+        console.warn('[GoogleAuth] Init failed:', error);
     }
 };
 
 const apiLoginWithGoogleCredential = async () => {
     // Check if running on mobile (Capacitor)
-    if (Capacitor.isNativePlatform()) {
+   if (Capacitor.isNativePlatform()) {
         try {
-            console.log('🔍 Starting Android Google Auth...');
-
             // Ensure Google Auth is initialized
             await initializeGoogleAuth();
 
             // Trigger Google Sign In
             const result = await GoogleAuth.signIn();
-            console.log('✅ Google Sign In successful:', result);
 
-            if (!result || !result.email) {
-                throw new Error('Invalid response from Google Sign In');
+           if (!result || !result.email) {
+               throw new Error('Invalid response from Google Sign In');
             }
 
-            return {
+           return {
                 id: `google-${result.id}`,
                 fullName: result.name || 'Google User',
                 email: result.email,
                 phone: '',
                 city: '',
-                avatarUrl: result.imageUrl || `data:image/svg+xml;base64,${btoa(`<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 96 96" fill="none">
+                avatarUrl: result.imageUrl || `data:image/svg+xml;base64,${btoa(`<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 96 96"fill="none">
   <!-- Background Circle -->
   <circle cx="48" cy="48" r="48" fill="#f0fdf4"/>
   <!-- Face -->
@@ -122,39 +130,59 @@ const apiLoginWithGoogleCredential = async () => {
                 accessToken: result.authentication?.accessToken,
             };
         } catch (error: any) {
-            console.error('❌ Mobile Google Auth error:', error);
-
-            // Provide more detailed error message
-            if (error.message?.includes('10')) {
-                throw new Error('Google Auth Error 10: SHA-1 fingerprint atau OAuth Client ID belum dikonfigurasi dengan benar di Firebase Console. Pastikan google-services.json sudah diupdate dan SHA-1 debug sudah ditambahkan.');
-            } else if (error.message?.includes('12500')) {
-                throw new Error('Google Auth Error 12500: Konfigurasi OAuth tidak valid. Periksa client ID dan pastikan aplikasi sudah terdaftar di Google Cloud Console.');
-            } else if (error.message?.includes('16')) {
-                throw new Error('Google Auth Error 16: Pengguna membatalkan login atau login gagal. Coba lagi.');
+            const errorMsg = error?.message || String(error);
+            const errorCode = error?.code || '';
+           
+           if (errorCode === '10' || errorMsg.includes('DEVELOPER_ERROR') || errorMsg.includes('10:')) {
+               throw new Error('Google authentication setup error. Please check:\n1. SHA-1 fingerprint is registered\n2. Web Client ID is configured\n3. Package name matches');
+           } else if (errorMsg.includes('NETWORK_ERROR')) {
+               throw new Error('Network error. Please check your internet connection.');
+            } else if (errorMsg.includes('SIGN_IN_REQUIRED') || errorMsg.includes('CANCELLED') || errorCode === '12501') {
+               throw new Error('Sign in cancelled.');
+            } else {
+               throw new Error(`Google Sign In failed: ${errorMsg} (code: ${errorCode})`);
             }
-
-            throw new Error(`Google Sign In gagal: ${error.message || 'Unknown error'}`);
         }
     }
 
     // Web/PWA Google OAuth (Google Identity Services)
     return new Promise((resolve, reject) => {
-        const webClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID_WEB || import.meta.env.VITE_GOOGLE_CLIENT_ID;
-        console.log('🔍 Web Google Auth - Client ID:', webClientId ? 'Available' : 'Missing');
+        let settled = false;
+
+        const safeResolve = (value: any) => {
+            if (settled) return;
+            settled = true;
+            resolve(value);
+        };
+
+        const safeReject = (error: any) => {
+            if (settled) return;
+            settled = true;
+            reject(error instanceof Error ? error : new Error(String(error)));
+        };
+
+        const webClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID_WEB || '';
+        const androidClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID_ANDROID || '';
 
         if (!webClientId) {
-            reject(new Error('Google Client ID web belum diisi di .env file'));
+            safeReject(new Error('VITE_GOOGLE_CLIENT_ID_WEB is missing. Use an OAuth Web application client ID.'));
             return;
         }
 
-        const waitForGoogleSdk = async (retry = 30): Promise<any> => {
+        const currentUrl = new URL(window.location.href);
+        const isLocalHost = currentUrl.hostname === 'localhost' || currentUrl.hostname === '127.0.0.1';
+        const isSecureOrigin = currentUrl.protocol === 'https:';
+        if (!isSecureOrigin && !isLocalHost) {
+            safeReject(new Error(`Google web sign-in requires HTTPS or localhost. Current origin: ${currentUrl.origin}`));
+            return;
+        }
+
+        const waitForGoogleSdk = async (retry = 10): Promise<any> => {
             if ((window as any).google?.accounts?.id) {
-                console.log('✅ Google SDK loaded');
                 return (window as any).google;
             }
             if (retry <= 0) {
-                console.error('❌ Google SDK timeout');
-                throw new Error('Google SDK belum siap. Refresh halaman dan coba lagi.');
+                throw new Error('Google SDK is not ready. Refresh the page and try again.');
             }
             await new Promise(r => setTimeout(r, 200));
             return waitForGoogleSdk(retry - 1);
@@ -163,18 +191,100 @@ const apiLoginWithGoogleCredential = async () => {
         waitForGoogleSdk()
             .then((googleSdk: any) => {
                 console.log('🔍 Initializing Google Sign In...');
+                let buttonFallbackShown = false;
+                let loadingShown = false;
+                const cleanupFns: Array<() => void> = [];
+                const finish = (runner: () => void) => {
+                    if (settled) return;
+                    settled = true;
+                    cleanupFns.forEach((fn) => fn());
+                    runner();
+                };
+
+                const showButtonFallback = () => {
+                    if (buttonFallbackShown || settled) return;
+                    buttonFallbackShown = true;
+
+                    const wrapper = document.createElement('div');
+                    wrapper.id = 'google-signin-fallback-wrapper';
+                    wrapper.style.position = 'fixed';
+                    wrapper.style.inset = '0';
+                    wrapper.style.background = 'rgba(0,0,0,0.45)';
+                    wrapper.style.zIndex = '9999';
+                    wrapper.style.display = 'flex';
+                    wrapper.style.alignItems = 'center';
+                    wrapper.style.justifyContent = 'center';
+
+                    const card = document.createElement('div');
+                    card.style.background = '#ffffff';
+                    card.style.padding = '18px';
+                    card.style.borderRadius = '14px';
+                    card.style.minWidth = '280px';
+                    card.style.boxShadow = '0 20px 40px rgba(0,0,0,0.2)';
+                    card.style.display = 'flex';
+                    card.style.flexDirection = 'column';
+                    card.style.alignItems = 'center';
+                    card.style.gap = '10px';
+
+                    const title = document.createElement('div');
+                    title.textContent = 'Continue with Google';
+                    title.style.fontSize = '15px';
+                    title.style.fontWeight = '600';
+                    title.style.color = '#111827';
+
+                    const buttonHost = document.createElement('div');
+                    buttonHost.id = 'google-signin-fallback-button';
+
+                    const cancelBtn = document.createElement('button');
+                    cancelBtn.type = 'button';
+                    cancelBtn.textContent = 'Close';
+                    cancelBtn.style.border = 'none';
+                    cancelBtn.style.background = 'transparent';
+                    cancelBtn.style.color = '#6b7280';
+                    cancelBtn.style.fontSize = '13px';
+                    cancelBtn.style.cursor = 'pointer';
+                    cancelBtn.onclick = () => finish(() => reject(new Error('Google Sign In cancelled')));
+
+                    card.appendChild(title);
+                    card.appendChild(buttonHost);
+                    card.appendChild(cancelBtn);
+                    wrapper.appendChild(card);
+                    document.body.appendChild(wrapper);
+
+                    googleSdk.accounts.id.renderButton(buttonHost, {
+                        type: 'standard',
+                        size: 'large',
+                        theme: 'outline',
+                        text: 'signin_with',
+                        shape: 'rectangular',
+                        width: 260
+                    });
+
+                    cleanupFns.push(() => {
+                        if (wrapper.parentNode) {
+                            wrapper.parentNode.removeChild(wrapper);
+                        }
+                    });
+                };
 
                 googleSdk.accounts.id.initialize({
                     client_id: webClientId,
+                    auto_select: false,
                     callback: (response: any) => {
+                        if (!loadingShown) {
+                            toast.loading('Checking Google account...', { id: 'google-check' });
+                            loadingShown = true;
+                        }
                         try {
                             console.log('✅ Google callback received');
                             if (!response?.credential) {
-                                reject(new Error('Credential Google tidak ditemukan'));
+                                toast.error('Google credential was not found', { id: 'google-check' });
+                                finish(() => reject(new Error('Google credential was not found')));
                                 return;
                             }
                             const payload = JSON.parse(atob(response.credential.split('.')[1]));
                             console.log('✅ Google user data:', payload.email);
+                            toast.success(`Hi, ${payload.name}!`, { id: 'google-check' });
 
                             const userData = {
                                 id: `google-${payload.sub}`,
@@ -204,57 +314,35 @@ const apiLoginWithGoogleCredential = async () => {
                                 vehicles: [],
                                 idToken: response.credential
                             };
-                            resolve(userData);
+                            finish(() => resolve(userData));
                         } catch (error) {
                             console.error('❌ Error parsing Google response:', error);
-                            reject(error);
+                            toast.error('Failed to process Google response', { id: 'google-check' });
+                            finish(() => reject(error instanceof Error ? error : new Error(String(error))));
                         }
                     },
                     cancel_on_tap_outside: false,
                 });
+                showButtonFallback();
+                googleSdk.accounts.id.prompt();
 
-                // Trigger the One Tap prompt
-                console.log('🔍 Showing Google One Tap...');
-                googleSdk.accounts.id.prompt((notification: any) => {
-                    console.log('🔍 Google prompt notification:', notification);
-
-                    if (notification.isNotDisplayed()) {
-                        console.warn('⚠️ Google One Tap tidak tampil, showing button popup instead');
-                        // Fallback: render button and trigger click
-                        const buttonDiv = document.createElement('div');
-                        buttonDiv.id = 'g_id_signin';
-                        buttonDiv.style.position = 'fixed';
-                        buttonDiv.style.top = '-9999px';
-                        document.body.appendChild(buttonDiv);
-
-                        googleSdk.accounts.id.renderButton(buttonDiv, {
-                            type: 'standard',
-                            size: 'large',
-                            theme: 'outline',
-                            text: 'signin_with',
-                            shape: 'rectangular',
-                            width: 250
-                        });
-
-                        // Auto-click the button
-                        setTimeout(() => {
-                            const iframe = buttonDiv.querySelector('iframe');
-                            if (iframe) {
-                                iframe.click();
-                            } else {
-                                // If iframe not found, show error
-                                reject(new Error('Google Sign In tidak dapat dimulai. Pastikan popup tidak diblokir browser.'));
-                            }
-                        }, 500);
-                    } else if (notification.isSkippedMoment()) {
-                        console.warn('⚠️ User skipped Google One Tap');
-                        reject(new Error('Google Sign In dibatalkan'));
-                    }
-                });
+                const failSafeTimeout = window.setTimeout(() => {
+                    finish(() => reject(new Error('Google Sign In failed. Please try again.')));
+                }, 8000);
+                cleanupFns.push(() => window.clearTimeout(failSafeTimeout));
             })
             .catch((error) => {
                 console.error('❌ Google SDK error:', error);
-                reject(error);
+                const sdkMessage = String((error as any)?.message || error || '');
+                if (/storagerelay/i.test(sdkMessage)) {
+                    safeReject(new Error('Invalid Google Web Client ID. Use VITE_GOOGLE_CLIENT_ID_WEB from an OAuth Web application client.'));
+                    return;
+                }
+                if (/origin|not allowed|unauthorized|idpiframe/i.test(sdkMessage)) {
+                    safeReject(new Error(`Google authorization failed for origin ${window.location.origin}. Add this origin to your OAuth Web client in Google Cloud.`));
+                    return;
+                }
+                safeReject(error);
             });
     });
 };
@@ -363,6 +451,7 @@ const AppNavigator = () => {
                 <Route path="/account-deleted" element={<AccountDeletedSuccessScreen />} />
                 <Route path="/profile" element={<ProfileScreen />} />
                 <Route path="/chat" element={<ChatScreen />} />
+                <Route path="/call/:customerName/:orderId?" element={<CallScreen />} />
                 <Route path="/receipts" element={<ReceiptsScreen />} />
             </Routes>
             {showBottomNav && <BottomNav />}
@@ -405,12 +494,17 @@ const App = () => {
                     console.log('🔍 Validating token with backend...');
                     // Try to get stored user data first
                     const storedUser = localStorage.getItem('user');
-                    if (storedUser) {
+                     if (storedUser) {
                         const userData = JSON.parse(storedUser);
                         console.log('✅ Found stored user data:', userData);
                         setUser(userData);
-                        if (!window.location.pathname.includes('/register')) {
+                        
+                        // Check if user is verified before authenticating
+                        if (userData.isEmailVerified !== false && !window.location.pathname.includes('/register')) {
                             setIsAuthenticated(true);
+                        } else if (userData.isEmailVerified === false) {
+                            console.log('⚠️ User not verified, clearing session');
+                            apiLogout();
                         }
                         return;
                     }
@@ -564,35 +658,48 @@ const App = () => {
     const loginWithGoogle = async () => {
         console.log('🔍 Starting Google login process');
         try {
-            const googleUser: any = await apiLoginWithGoogleCredential();
-
-            let googleAuthResult: any;
-            try {
-                googleAuthResult = await apiGoogleAuth({
-                    uid: googleUser?.id || `google-${Date.now()}`,
-                    email: googleUser?.email || '',
-                    displayName: googleUser?.fullName || 'Google User'
-                });
-            } catch (apiError) {
-                console.warn('⚠️ Google Auth backend error, falling back to register flow:', apiError);
-                // Force user to register if backend throws error or user not found
-                googleAuthResult = { isNewUser: true, profile: null };
+            // Clear any previous error state
+            localStorage.removeItem('google_auth_error');
+            
+            const { googleAuthService } = await import('./src/services/googleAuth');
+            const result = await googleAuthService.signIn();
+            
+            if (!result.success || !result.user) {
+                throw new Error(result.error || 'Google Sign-In failed');
             }
-
-            if (googleAuthResult?.isNewUser) {
-                const profile = googleAuthResult?.profile || {
-                    fullName: googleUser?.fullName || 'Google User',
-                    email: googleUser?.email || '',
+            
+            console.log('✅ Google credential obtained:', result.user.email);
+            
+            // Authenticate with backend
+            const backendResult = await googleAuthService.authenticateWithBackend(result.user);
+            
+            if (backendResult.isNewUser) {
+                const profile = {
+                    fullName: result.user.name || 'Google User',
+                    email: result.user.email || '',
                     phone: '',
                     city: '',
-                    avatarUrl: googleUser?.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(googleUser?.fullName || 'Google User')}&background=random`,
+                    avatarUrl: result.user.imageUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(result.user.name || 'Google User')}&background=random`,
                     vehicles: []
                 };
+                console.log('ℹ️ New Google user detected:', profile.email);
                 return { isNewUser: true, profile };
             }
-
-            const customer = googleAuthResult?.customer || googleUser;
-            const token = googleAuthResult?.token || googleUser?.token || `mock-google-token-${Date.now()}`;
+            
+            const customer = {
+                id: backendResult.customer?.id || result.user.id,
+                fullName: backendResult.customer?.fullName || result.user.name,
+                email: backendResult.customer?.email || result.user.email,
+                phone: (backendResult.customer as any)?.phone || '',
+                city: (backendResult.customer as any)?.city || '',
+                avatarUrl: (backendResult.customer as any)?.avatarUrl || result.user.imageUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(result.user.name || 'Google User')}&background=random`,
+                vehicles: (backendResult.customer as any)?.vehicles || [],
+                tin: (backendResult.customer as any)?.tin,
+                ageProofFileName: (backendResult.customer as any)?.ageProofFileName,
+                isEmailVerified: backendResult.customer?.isEmailVerified ?? true
+            };
+            
+            const token = backendResult.token || `mock-google-token-${Date.now()}`;
             setToken(token);
             setUser(customer);
             setIsAuthenticated(true);
@@ -600,8 +707,17 @@ const App = () => {
             localStorage.setItem('user', JSON.stringify(customer));
             console.log('✅ Google login successful, token saved:', token);
             return { isNewUser: false, customer };
-        } catch (error) {
-            console.error('Google login error:', error);
+        } catch (error: any) {
+            console.error('❌ Google login error:', error);
+            console.error('Error stack:', error.stack);
+            
+            // Store error details for debugging
+            localStorage.setItem('google_auth_error', JSON.stringify({
+                message: error?.message || String(error),
+                stack: error.stack,
+                timestamp: new Date().toISOString()
+            }));
+            
             throw error;
         }
     };

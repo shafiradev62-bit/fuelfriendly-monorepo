@@ -145,7 +145,7 @@ const JawgVehicleTrackingMap: React.FC<JawgVehicleTrackingMapProps> = ({
 
     const carIcon = L.divIcon({
       className: 'car-div-icon',
-      html: `<div class="car-icon-container"><img src="/car.png" alt="car" style="will-change: transform; transform: translateZ(0); backface-visibility: hidden; width: 36px; height: 36px; drop-shadow: 0 4px 6px rgba(0,0,0,0.1);" /></div>`,
+      html: `<div class="car-icon-container"><img src="/car.png" alt="car" style="will-change: transform; transform: translateZ(0); backface-visibility: hidden; width: 36px; height: 36px; drop-shadow: 0 4px 6px rgba(0,0,0,0.1); image-rendering: pixelated; image-rendering: -moz-crisp-edges; image-rendering: crisp-edges;" /></div>`,
       iconSize: [36, 36],
       iconAnchor: [18, 18]
     });
@@ -171,8 +171,7 @@ const JawgVehicleTrackingMap: React.FC<JawgVehicleTrackingMapProps> = ({
       const nextPoint = latLngs[segmentIndex + 1];
       const distanceMeters = currentPoint.distanceTo(nextPoint);
       const baseMs = (distanceMeters / speedMps) * 1000;
-      const noise = 0.92 + Math.random() * 0.18;
-      segmentDurationMsRef.current = Math.max(500, baseMs * noise);
+      segmentDurationMsRef.current = Math.max(500, baseMs);
     };
 
     updateSegmentDuration(0);
@@ -206,7 +205,7 @@ const JawgVehicleTrackingMap: React.FC<JawgVehicleTrackingMapProps> = ({
       const heading = bearing(point([from.lng, from.lat]), point([to.lng, to.lat]));
       const carElement = carMarkerRef.current.getElement()?.querySelector('.car-icon-container') as HTMLElement | null;
       if (carElement) {
-        carElement.style.transition = 'transform 0.12s ease-out';
+        carElement.style.transition = 'transform 0.25s cubic-bezier(0.4, 0, 0.2, 1)';
         carElement.style.transform = `rotate(${heading}deg) translateZ(0)`;
       }
 

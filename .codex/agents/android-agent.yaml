@@ -1,0 +1,145 @@
+name: fuel-friend-android-builder
+description: Builds and deploys Android APK/AAB to Play Store using remote Linux agent
+platform: ubuntu
+instanceType: ubuntu-22.04-xl
+
+environment:
+  NODE_VERSION: '20'
+  JAVA_VERSION: '17'
+  ANDROID_SDK_VERSION: '34'
+  GRADLE_VERSION: '8.0'
+
+triggers:
+  - type: push
+    branches: [main, develop]
+    paths:
+      - 'src/**'
+      - 'capacitor.config.ts'
+      - 'package.json'
+  - type: manual
+    requireApproval: true
+
+steps:
+  - name: Checkout Code
+    uses: actions/checkout@v4
+    
+  - name: Setup Node.js
+    uses: actions/setup-node@v4
+    with:
+      node-version: ${{ env.NODE_VERSION }}
+      cache: 'npm'
+      
+  - name: Cache node_modules
+    uses: actions/cache@v4
+    with:
+      path: node_modules
+      key: ${{ runner.os }}-node-${{ hashFiles('package-lock.json') }}
+      
+  - name: Setup Java JDK
+    uses: actions/setup-java@v4
+    with:
+      java-version: ${{ env.JAVA_VERSION }}
+      distribution: 'temurin'
+      
+  - name: Setup Android SDK
+    uses: android-actions/setup-android@v3
+    with:
+      cmdline-tools-version: 9.0
+      packages: 'platform-tools platforms;android-34 build-tools;34.0.0'
+      
+  - name: Cache Gradle
+    uses: actions/cache@v4
+    with:
+      path: |
+        ~/.gradle/caches
+        ~/.gradle/wrapper
+      key: ${{ runner.os }}-gradle-${{ hashFiles('android/**/*.gradle*', 'android/**/libs.versions.toml') }}
+      
+  - name: Install Dependencies
+    run: npm ci
+    
+  - name: Build Web Assets
+    run: npm run build
+    timeout-minutes: 10
+    
+  - name: Sync Android
+    run: npx cap sync android
+    timeout-minutes: 5
+    
+  - name: Make Gradlew Executable
+    workingDirectory: android
+    run: chmod +x gradlew
+    
+  - name: Build Debug APK
+    workingDirectory: android
+    run: ./gradlew assembleDebug
+    timeout-minutes: 20
+    
+  - name: Build Release AAB
+    workingDirectory: android
+    run: ./gradlew bundleRelease
+    timeout-minutes: 20
+    
+  - name: Sign AAB
+    uses: r0adkll/sign-android-release@v1
+    with:
+      releaseDirectory: android/app/build/outputs/bundle/release
+      signingKeyBase64: ${{ secrets.ANDROID_SIGNING_KEY }}
+      alias: ${{ secrets.ANDROID_KEY_ALIAS }}
+      keyStorePassword: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+    timeout-minutes: 5
+    
+  - name: Upload to Play Store (Internal Testing)
+    uses: r0adkll/upload-google-play@v1
+    with:
+      serviceAccountJsonPlainText: ${{ secrets.PLAY_STORE_SERVICE_ACCOUNT }}
+      packageName: com.fuelfriend.strict
+      releaseFiles: android/app/build/outputs/bundle/release/app-release.aab
+      track: internal
+      status: draft
+      inAppUpdatePriority: 2
+      userFraction: 1.0
+    timeout-minutes: 10
+    
+  - name: Generate APK for Download
+    if: always()
+    uses: actions/upload-artifact@v4
+    with:
+      name: fuel-friend-debug-apk
+      path: android/app/build/outputs/apk/debug/app-debug.apk
+      retention-days: 7
+      
+onFailure:
+  - name: Send Slack Notification
+    uses: slackapi/slack-github-action@v1
+    with:
+      channel: '#fuel-friend-builds'
+      text: "❌ Android Build Failed\nCommit: ${{ github.sha }}\nError: See logs"
+      webhook-url: ${{ secrets.SLACK_WEBHOOK_URL }}
+      
+onSuccess:
+  - name: Send Slack Notification
+    uses: slackapi/slack-github-action@v1
+    with:
+      channel: '#fuel-friend-builds'
+      text: "✅ Android Build Successful!\nAPK & AAB uploaded to Play Store Internal Testing\nCommit: ${{ github.sha }}"
+      webhook-url: ${{ secrets.SLACK_WEBHOOK_URL }}
+      
+artifacts:
+  - name: debug-apk
+    path: android/app/build/outputs/apk/debug/app-debug.apk
+    retention: 7d
+  - name: release-aab
+    path: android/app/build/outputs/bundle/release/app-release.aab
+    retention: 30d
+  - name: logs
+    path: android/build/*.log
+    retention: 30d
+
+cache:
+  paths:
+    - node_modules
+    - ~/.gradle/caches
+    - ~/.gradle/wrapper
+
+timeout: 3600  # 60 minutes total

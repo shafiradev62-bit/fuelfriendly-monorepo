@@ -44,8 +44,8 @@ export const useCheckoutCalculation = ({
     // VAT only applies to convenience items (10%)
     const vat = convenienceItemsCost * VAT_RATE;
     
-    // Calculate total with validation
-    const total = 
+    // Calculate total with validation and round to 2 decimal places to prevent floating point errors
+    const total = Math.round((
       fuelCost +
       convenienceItemsCost +
       serviceFee +
@@ -53,7 +53,8 @@ export const useCheckoutCalculation = ({
       subscriptionCost +
       additionalVehicleCost +
       vat +
-      tip;
+      tip
+    ) * 100) / 100;
     
     // Validate total calculation
     if (isNaN(total)) {

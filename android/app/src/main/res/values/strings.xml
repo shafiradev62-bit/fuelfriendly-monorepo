@@ -1,7 +1,9 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">FuelFriendly</string>
-    <string name="title_activity_main">FuelFriendly</string>
-    <string name="package_name">com.fuelfriendly.app</string>
-    <string name="custom_url_scheme">com.fuelfriendly.app</string>
+    <string name="app_name">Fuel Friend</string>
+    <string name="title_activity_main">Fuel Friend</string>
+    <string name="package_name">com.fuelfriend.strict</string>
+    <string name="custom_url_scheme">com.fuelfriend.strict</string>
+    <!-- Google OAuth Client ID for Android -->
+    <string name="default_web_client_id">361936469399-t2o5h62466mk8gcuvqt62erj7oekt0ar.apps.googleusercontent.com</string>
 </resources>

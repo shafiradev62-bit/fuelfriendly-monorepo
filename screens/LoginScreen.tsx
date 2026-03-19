@@ -12,10 +12,19 @@ const LoginScreen = () => {
 
   useEffect(() => {
     document.body.classList.add('login-screen');
+    
+    // Check if user is actually verified before redirecting
+    const customerId = localStorage.getItem("customerId");
+    const customerEmail = localStorage.getItem("customerEmail");
+    
+    if (customerId && customerEmail) {
+      navigate('/home');
+    }
+    
     return () => {
       document.body.classList.remove('login-screen');
     };
-  }, []);
+  }, [navigate]);
 
   const handleGoogleSignIn = async () => {
     console.log('🔍 handleGoogleSignIn called');
@@ -31,6 +40,17 @@ const LoginScreen = () => {
         navigate('/register', {
           state: {
             prefill: googleLoginResult?.profile || {}
+          }
+        });
+        return;
+      }
+
+      // Check for incomplete profile (missing vehicles)
+      if (googleLoginResult?.customer && (!googleLoginResult.customer.vehicles || googleLoginResult.customer.vehicles.length === 0)) {
+        navigate('/register', {
+          state: {
+            step: 2,
+            prefill: googleLoginResult.customer
           }
         });
         return;
@@ -60,10 +80,26 @@ const LoginScreen = () => {
         navigate('/home');
       }
     } catch (e: any) {
-      console.error('Google login error:', e);
-      setError(e?.message || 'Google Sign In gagal. Silakan coba lagi.');
+     console.error('❌ Google login error:', e);
+      
+      // Get detailed error from localStorage if available
+     const storedError = localStorage.getItem('google_auth_error');
+      let detailedError = null;
+     if (storedError) {
+        try {
+          detailedError = JSON.parse(storedError);
+         console.error('📋 Detailed error from storage:', detailedError);
+        } catch (parseErr) {
+         console.error('Failed to parse stored error:', parseErr);
+        }
+      }
+      
+      // Show user-friendly error message
+     const errorMsg = e?.message || 'Google Sign In failed. Please try again.';
+     setError(errorMsg);
+     console.error('User-facing error message:', errorMsg);
     } finally {
-      setIsGoogleLoading(false);
+     setIsGoogleLoading(false);
     }
   };
 

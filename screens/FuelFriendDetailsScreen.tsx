@@ -110,7 +110,7 @@ const FuelFriendDetailsScreen = () => {
         deliveryFee: 4.99,
         rating: 4.8,
         totalReviews: 156,
-        profilePhoto: '/2.png',
+        profilePhoto: '/fuel-friend-avatar.svg',
         about: 'Experienced fuel delivery professional with over 5 years of service. Specializes in quick and efficient fuel delivery with excellent customer service. Always on time and very professional.'
       },
       {
@@ -120,7 +120,7 @@ const FuelFriendDetailsScreen = () => {
         deliveryFee: 5.49,
         rating: 4.9,
         totalReviews: 203,
-        profilePhoto: '/2.png',
+        profilePhoto: '/fuel-friend-avatar.svg',
         about: 'Friendly and reliable fuel delivery expert. Known for her attention to detail and exceptional customer service. Always ensures safe and clean fuel delivery.'
       },
       {
@@ -130,7 +130,7 @@ const FuelFriendDetailsScreen = () => {
         deliveryFee: 5.99,
         rating: 4.8,
         totalReviews: 156,
-        profilePhoto: '/2.png',
+        profilePhoto: '/fuel-friend-avatar.svg',
         about: 'Experienced fuel delivery professional with over 5 years of service. Specializes in quick and efficient fuel delivery with excellent customer service. Always on time and very professional.'
       },
       {
@@ -140,7 +140,7 @@ const FuelFriendDetailsScreen = () => {
         deliveryFee: 6.99,
         rating: 4.9,
         totalReviews: 203,
-        profilePhoto: '/2.png',
+        profilePhoto: '/fuel-friend-avatar.svg',
         about: 'Friendly and reliable fuel delivery expert. Known for her attention to detail and exceptional customer service. Always ensures safe and clean fuel delivery.'
       }
     ];
@@ -317,11 +317,11 @@ const FuelFriendDetailsScreen = () => {
         <div className="px-4 py-6 text-center">
           <div className="relative inline-block mb-4">
             <img
-              src={fuelFriend.profilePhoto || '/fuel friend.png'}
+              src={fuelFriend.profilePhoto || '/fuel-friend-avatar.svg'}
               alt={fuelFriend.fullName}
               className="w-24 h-24 rounded-full object-cover mx-auto ring-2 ring-[#3AC36C]/20"
               onError={(e) => {
-                e.currentTarget.src = '/fuel friend.png';
+                e.currentTarget.src = '/fuel-friend-avatar.svg';
               }}
             />
             <div className="absolute bottom-1 right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white"></div>

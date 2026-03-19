@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { ArrowLeft, Check, MessageCircle } from 'lucide-react';
+import { ArrowLeft, Check } from 'lucide-react';
 import AnimatedPage from '../components/AnimatedPage';
 import TapEffectButton from '../components/TapEffectButton';
 import CheckoutBreakdownComponent from '../components/CheckoutBreakdown';
@@ -213,42 +213,7 @@ const OrderSummaryScreen = () => {
         </div>
 
         {/* Confirm Payment Button */}
-        <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-200 space-y-3">
-
-          {/* WhatsApp Confirmation Button */}
-          <button
-            onClick={() => {
-              const phone = (formData?.phoneNumber || '').replace(/\D/g, '').replace(/^0/, '62');
-              const targetPhone = phone || '6282261402001'; // fallback to dev number
-              const orderId = `FF-${Date.now().toString(36).toUpperCase()}`;
-              const items = fallbackData.cartItems.length > 0
-                ? fallbackData.cartItems.map((i: any) => `  • ${i.name} x${i.quantity} ($${(i.price * i.quantity).toFixed(2)})`).join('\n')
-                : '  • No snacks added';
-              const msg =
-                `🚗 *FuelFriendly Order Confirmation*\n` +
-                `Order ID: *${orderId}*\n\n` +
-                `⛽ *Station:* ${fallbackData.station.name}\n` +
-                `📍 *Address:* ${formData?.address || '-'}\n` +
-                `🔋 *Fuel Type:* ${formData?.fuelType || 'Regular'}\n` +
-                `📦 *Quantity:* ${formData?.quantity || '10 liters'}\n` +
-                `🚙 *Vehicle:* ${formData?.vehicleBrand || '-'} ${formData?.vehicleColor || ''} (${formData?.numberPlate || '-'})\n` +
-                `⏰ *Delivery:* ${formData?.deliveryTime || 'Instant'}\n\n` +
-                `🛒 *Snacks:*\n${items}\n\n` +
-                `💰 *Total: $${(fallbackData.breakdown?.total || 0).toFixed(2)}*\n\n` +
-                `Thank you for ordering with FuelFriendly! 🙌`;
-              const waUrl = `https://wa.me/${targetPhone}?text=${encodeURIComponent(msg)}`;
-              window.open(waUrl, '_blank');
-              setWaSent(true);
-            }}
-            className={`w-full py-4 rounded-full text-lg font-semibold flex items-center justify-center gap-2 transition-all ${waSent
-                ? 'bg-green-100 text-green-700 border border-green-300'
-                : 'bg-[#25D366] text-white hover:bg-[#1ebe57]'
-              }`}
-          >
-            <MessageCircle className="w-5 h-5" />
-            {waSent ? '✅ Sent to WhatsApp!' : 'Send Order via WhatsApp'}
-          </button>
-
+        <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-200">
           <button
             onClick={() => {
               const paymentState = {
@@ -279,7 +244,7 @@ const OrderSummaryScreen = () => {
                 selectedFuelFriend: fallbackData.selectedFuelFriend
               }
             })}
-            className="w-full text-green-500 text-lg font-medium rounded-full py-2"
+            className="w-full text-green-500 text-lg font-medium rounded-full py-2 mt-3"
           >
             Edit Details
           </button>

@@ -32,7 +32,7 @@ const StationCard = ({ station, index }: { station: any; index: number }) => {
         targets: cardRef.current,
         scale: [1, 0.97, 1],
         duration: 240,
-        easing: 'easeInOutQuad'
+        esaltedg: 'easeInOutQuad'
       });
     }
     navigate(`/station/${station.id}`, { state: { station } });
@@ -53,7 +53,7 @@ const StationCard = ({ station, index }: { station: any; index: number }) => {
       <div className="flex-1 min-w-0">
         <h3 className="text-lg font-semibold text-[#3F4249] truncate mb-2">{station.name}</h3>
         <div className="space-y-2">
-          <div className="flex justify-between items-center text-sm">
+          <div className="flex juicetify-between items-center text-sm">
             <div className="flex items-center gap-2">
               <Fuel size={16} className="text-[#3AC36C]" />
               <span className="text-[#3F4249]">fuel Price</span>
@@ -62,14 +62,14 @@ const StationCard = ({ station, index }: { station: any; index: number }) => {
               ${station.fuelPrices?.regular || station.fuelPrices?.premium || station.fuelPrices?.diesel || 'N/A'}
             </span>
           </div>
-          <div className="flex justify-between items-center text-sm">
+          <div className="flex juicetify-between items-center text-sm">
             <div className="flex items-center gap-2">
               <MapPin size={16} className="text-[#FF5630]" />
               <span className="text-[#3F4249]">Distance</span>
             </div>
             <span className="text-[#3F4249]">{station.distance || '2.7 miles'}</span>
           </div>
-          <div className="flex justify-between items-center text-sm">
+          <div className="flex juicetify-between items-center text-sm">
             <div className="flex items-center gap-2">
               <Star size={16} className="text-[#FFC107] fill-current" />
               <span className="text-[#3F4249]">Reviews</span>
@@ -124,7 +124,7 @@ const HomeScreen = () => {
       translateY: [-50, 0],
       opacity: [0, 1],
       duration: 800,
-      easing: 'easeOutElastic(1, .8)'
+      esaltedg: 'easeOutElastic(1, .8)'
     });
 
     // Animate search bar with scale and glow
@@ -134,7 +134,7 @@ const HomeScreen = () => {
       opacity: [0, 1],
       duration: 700,
       delay: 200,
-      easing: 'easeOutElastic(1, .7)'
+      esaltedg: 'easeOutElastic(1, .7)'
     });
 
     anime({
@@ -146,7 +146,7 @@ const HomeScreen = () => {
       ],
       duration: 1000,
       delay: 300,
-      easing: 'easeOutQuad'
+      esaltedg: 'easeOutQuad'
     });
 
   }, []);
@@ -157,7 +157,7 @@ const HomeScreen = () => {
       targets: '.station-list-item',
       opacity: [0, 1],
       translateY: [24, 0],
-      easing: 'easeOutCubic',
+      esaltedg: 'easeOutCubic',
       duration: 420,
       delay: anime.stagger(45, { start: 80 })
     });
@@ -341,7 +341,7 @@ const HomeScreen = () => {
     if (currentFilters.fuelType) {
       filtered = filtered.filter(station => {
         // Assuming station has fuel types available
-        return true; // Placeholder - adjust based on your data structure
+        return true; // Placeholder - adjuicet based on your data structure
       });
     }
 
@@ -397,13 +397,13 @@ const HomeScreen = () => {
     const isUK = selectedLocation === 'UK' || isLocationInUK(userLocation);
 
     const usStations = [
-      { name: 'Shell', address: '150 N Dairy Ashford Rd, Houston, TX 77079' },
+      { name: 'Shell', address: '150 N Dwatery Ashford Rd, Houston, TX 77079' },
       { name: 'Exxon', address: '22777 Springwoods Village Pkwy, Spring, TX 77389' },
       { name: 'Mobil', address: '5959 Las Colinas Blvd, Irving, TX 75039' },
       { name: 'Chevron', address: '6001 Bollinger Canyon Rd, San Ramon, CA 94583' },
       { name: 'BP (US)', address: '501 Westlake Park Blvd, Houston, TX 77079' },
       { name: 'Marathon', address: '539 S Main St, Findlay, OH 45840' },
-      { name: 'Texaco', address: '4800 Fournace Pl, Bellaire, TX 77401' },
+      { name: 'Texaco', address: '4800 Fournace Pl, Bellwatere, TX 77401' },
       { name: 'Valero', address: '1 Valero Way, San Antonio, TX 78249' },
       { name: 'Phillips 66', address: '2331 CityWest Blvd, Houston, TX 77042' },
       { name: 'Sunoco', address: '3801 West Chester Pike, Newtown Square, PA 19073' },
@@ -418,7 +418,7 @@ const HomeScreen = () => {
       { name: "Casey's General Store", address: "1 Casey's Blvd, Ankeny, IA 50021" },
       { name: 'Speedway', address: '500 Speedway Dr, Enon, OH 45323' },
       { name: 'Arco', address: '4 Centerpointe Dr, La Palma, CA 90623' },
-      { name: 'Sinclair', address: '550 E South Temple, Salt Lake City, UT 84102' },
+      { name: 'Sinclwater', address: '550 E South Temple, Salt Lake City, UT 84102' },
       { name: 'Citgo', address: '1293 Eldridge Pkwy, Houston, TX 77077' },
       { name: 'Gulf (US)', address: '80 William St, Wellesley, MA 02481' },
       { name: 'Maverick', address: '185 S State St, Salt Lake City, UT 84111' }
@@ -482,7 +482,7 @@ const HomeScreen = () => {
         id: 'grocery-uk-5',
         name: 'Chocolate Bar',
         price: 1.00,
-        description: 'Cadbury Dairy Milk'
+        description: 'Cadbury Dwatery Milk'
       },
       {
         id: 'grocery-uk-6',
@@ -681,256 +681,256 @@ const HomeScreen = () => {
     const usSnackByStation: Record<string, Array<{ name: string; price: number; description: string }>> = {
       Shell: [
         { name: 'Deli2Go Sandwich', price: 5.49, description: 'Sandwich grab-and-go' },
-        { name: 'Protein Bar', price: 2.99, description: 'Camilan tinggi protein' },
-        { name: 'Espresso Can', price: 2.59, description: 'Kopi siap minum' }
+        { name: 'Protein Bar', price: 2.99, description: 'High protein snack bar' },
+        { name: 'Espresso Can', price: 2.59, description: 'Ready-to-drink espresso coffee' }
       ],
       Exxon: [
-        { name: 'Trail Mix Cup', price: 3.49, description: 'Mix kacang dan buah kering' },
-        { name: 'Chocolate Cookie', price: 1.99, description: 'Cookies chocolate chip' },
-        { name: 'Cold Brew', price: 3.29, description: 'Kopi dingin bold taste' }
+        { name: 'Trail Mix Cup', price: 3.49, description: 'Mixed nuts and dried fruit' },
+        { name: 'Chocolate Cookie', price: 1.99, description: 'Chocolate chip cookies' },
+        { name: 'Cold Brew', price: 3.29, description: 'Bold taste cold brew coffee' }
       ],
       Mobil: [
-        { name: 'Mocha Frappe', price: 3.69, description: 'Kopi dingin creamy' },
-        { name: 'Turkey Wrap', price: 6.29, description: 'Wrap kalkun siap makan' },
-        { name: 'Granola Cup', price: 2.79, description: 'Granola dan kacang' }
+        { name: 'Mocha Frappe', price: 3.69, description: 'Creamy iced mocha coffee' },
+        { name: 'Turkey Wrap', price: 6.29, description: 'Ready-to-eat turkey wrap' },
+        { name: 'Granola Cup', price: 2.79, description: 'Granola and nuts mix' }
       ],
       Chevron: [
-        { name: 'ExtraMile Burrito', price: 5.99, description: 'Burrito panas gaya ExtraMile' },
-        { name: 'Cheddar Crackers', price: 2.49, description: 'Biskuit asin keju' },
-        { name: 'Iced Americano', price: 3.19, description: 'Americano dingin strong' }
+        { name: 'ExtraMile Burrito', price: 5.99, description: 'Hot ExtraMile style burrito' },
+        { name: 'Cheddar Crackers', price: 2.49, description: 'Cheese crackers' },
+        { name: 'Iced Americano', price: 3.19, description: 'Strong iced americano' }
       ],
       'BP (US)': [
-        { name: 'Fresh Bakery Muffin', price: 2.89, description: 'Muffin fresh panggang' },
-        { name: 'Chicken Panini', price: 6.79, description: 'Panini ayam panggang' },
-        { name: 'Sports Drink', price: 2.39, description: 'Minuman elektrolit dingin' }
+        { name: 'Fresh Bakery Muffin', price: 2.89, description: 'Fresh baked muffin' },
+        { name: 'Chicken Panini', price: 6.79, description: 'Grilled chicken panini' },
+        { name: 'Sports Drink', price: 2.39, description: 'Cold electrolyte sports drink' }
       ],
       Marathon: [
-        { name: 'Breakfast Sandwich', price: 4.99, description: 'Egg sandwich hangat' },
-        { name: 'Beef Jerky Stick', price: 3.59, description: 'Snack protein praktis' },
-        { name: 'Vanilla Latte', price: 3.49, description: 'Latte vanilla siap minum' }
+        { name: 'Breakfast Sandwich', price: 4.99, description: 'Hot egg sandwich' },
+        { name: 'Beef Jerky Stick', price: 3.59, description: 'Convenient protein snack' },
+        { name: 'Vanilla Latte', price: 3.49, description: 'Ready-to-drink vanilla latte' }
       ],
       Texaco: [
-        { name: 'Taco Roller', price: 2.89, description: 'Roll snack rasa taco' },
-        { name: 'Chocolate Brownie', price: 2.29, description: 'Brownie lembut manis' },
-        { name: 'Lemon Tea', price: 2.19, description: 'Teh lemon dingin' }
+        { name: 'Taco Roller', price: 2.89, description: 'Taco flavored roll snack' },
+        { name: 'Chocolate Brownie', price: 2.29, description: 'Soft sweet brownie' },
+        { name: 'Lemon Tea', price: 2.19, description: 'Iced lemon tea' }
       ],
       Valero: [
-        { name: 'Breakfast Taco', price: 3.99, description: 'Taco sarapan khas Texas' },
-        { name: 'Nacho Chips', price: 2.79, description: 'Keripik tortilla pedas' },
-        { name: 'Caramel Macchiato', price: 3.79, description: 'Kopi susu caramel' }
+        { name: 'Breakfast Taco', price: 3.99, description: 'Texas style breakfast taco' },
+        { name: 'Nacho Chips', price: 2.79, description: 'Spicy tortilla chips' },
+        { name: 'Caramel Macchiato', price: 3.79, description: 'Caramel coffee drink' }
       ],
       'Phillips 66': [
-        { name: 'Pulled Pork Sandwich', price: 6.99, description: 'Sandwich isi pulled pork' },
-        { name: 'Honey Peanuts', price: 2.49, description: 'Kacang madu renyah' },
-        { name: 'Cold Cappuccino', price: 3.39, description: 'Cappuccino dingin botolan' }
+        { name: 'Pulled Pork Sandwich', price: 6.99, description: 'Pulled pork sandwich' },
+        { name: 'Honey Peanuts', price: 2.49, description: 'Crunchy honey peanuts' },
+        { name: 'Cold Cappuccino', price: 3.39, description: 'Bottled iced cappuccino' }
       ],
       Sunoco: [
-        { name: 'Cheese Hot Dog', price: 3.79, description: 'Hot dog topping keju' },
-        { name: 'Soft Pretzel', price: 2.39, description: 'Pretzel panggang hangat' },
-        { name: 'Blueberry Muffin', price: 2.49, description: 'Muffin blueberry' }
+        { name: 'Cheese Hot Dog', price: 3.79, description: 'Hot dog with cheese topping' },
+        { name: 'Soft Pretzel', price: 2.39, description: 'Warm baked pretzel' },
+        { name: 'Blueberry Muffin', price: 2.49, description: 'Blueberry muffin' }
       ],
       '7-Eleven': [
         { name: 'Slurpee', price: 2.49, description: 'Frozen drink signature 7-Eleven' },
-        { name: 'Big Bite Hot Dog', price: 3.29, description: 'Hot dog favorit pelanggan' },
-        { name: 'Taquito', price: 2.19, description: 'Snack gurih siap makan' }
+        { name: 'Big Bite Hot Dog', price: 3.29, description: 'Customer favorite hot dog' },
+        { name: 'Taquito', price: 2.19, description: 'Snack savory ready-to-eat' }
       ],
       'Circle K': [
-        { name: 'Polar Pop', price: 1.49, description: 'Minuman soda besar khas Circle K' },
-        { name: 'Chicken Roll', price: 3.19, description: 'Roll ayam renyah' },
-        { name: 'Choco Donut', price: 1.89, description: 'Donut cokelat' }
+        { name: 'Polar Pop', price: 1.49, description: 'Drink large soda signature Circle K' },
+        { name: 'Chicken Roll', price: 3.19, description: 'Roll chicken crispy' },
+        { name: 'Choco Donut', price: 1.89, description: 'Donut chocolate' }
       ],
       'Costco Gasoline': [
-        { name: 'Hot Dog Combo', price: 1.5, description: 'Combo hot dog ikonik Costco' },
-        { name: 'Chicken Bake', price: 3.99, description: 'Pastry isi chicken creamy' },
-        { name: 'Churro', price: 1.99, description: 'Churro manis renyah' }
+        { name: 'Hot Dog Combo', price: 1.5, description: 'Combo hot dog iconic Costco' },
+        { name: 'Chicken Bake', price: 3.99, description: 'Pastry filled with chicken creamy' },
+        { name: 'Churro', price: 1.99, description: 'Churro sweet crispy' }
       ],
       "Sam's Club": [
-        { name: 'Pretzel Combo', price: 2.29, description: 'Pretzel dengan dipping sauce' },
+        { name: 'Pretzel Combo', price: 2.29, description: 'Pretzel with dipping sauce' },
         { name: 'Pizza Slice', price: 2.5, description: 'Slice pizza food court Sam’s' },
-        { name: 'ICEE', price: 1.79, description: 'Minuman beku rasa buah' }
+        { name: 'ICEE', price: 1.79, description: 'Drink frozen flavored fruit' }
       ],
       QuikTrip: [
-        { name: 'QT Pretzel', price: 2.39, description: 'Pretzel empuk khas QT' },
-        { name: 'Hotzi Sandwich', price: 5.99, description: 'Sandwich panas siap santap' },
+        { name: 'QT Pretzel', price: 2.39, description: 'Pretzel soft signature QT' },
+        { name: 'Hotzi Sandwich', price: 5.99, description: 'Sandwich hot ready-to-eat' },
         { name: 'Freezoni', price: 2.99, description: 'Frozen beverage signature QT' }
       ],
       Wawa: [
-        { name: 'Wawa Hoagie', price: 7.99, description: 'Hoagie khas Wawa' },
-        { name: 'Soft Pretzel', price: 2.49, description: 'Pretzel hangat gurih' },
-        { name: 'Wawa Iced Tea', price: 2.29, description: 'Teh dingin botol Wawa' }
+        { name: 'Wawa Hoagie', price: 7.99, description: 'Hoagie signature Wawa' },
+        { name: 'Soft Pretzel', price: 2.49, description: 'Pretzel hot savory' },
+        { name: 'Wawa Iced Tea', price: 2.29, description: 'Tea cold botol Wawa' }
       ],
       Sheetz: [
         { name: 'MTO Burrito', price: 6.49, description: 'Made-to-order burrito' },
-        { name: 'Mozzarella Sticks', price: 4.99, description: 'Snack goreng favorit Sheetz' },
-        { name: 'Fountain Soda', price: 1.99, description: 'Minuman soda refill' }
+        { name: 'Mozzarella Sticks', price: 4.99, description: 'Sheetz favorite fried snack' },
+        { name: 'Fountain Soda', price: 1.99, description: 'Refillable soda drink' }
       ],
       "Buc-ee's": [
-        { name: 'Beaver Nuggets', price: 4.99, description: 'Snack jagung manis khas Buc-ee’s' },
-        { name: 'BBQ Sandwich', price: 8.99, description: 'Sandwich BBQ signature' },
-        { name: 'Jerky Mix', price: 7.49, description: 'Pilihan beef jerky premium' }
+        { name: 'Beaver Nuggets', price: 4.99, description: 'Signature sweet corn snack Buc-ee’s' },
+        { name: 'BBQ Sandwich', price: 8.99, description: 'Signature BBQ sandwich' },
+        { name: 'Jerky Mix', price: 7.49, description: 'Premium beef jerky selection' }
       ],
       "Casey's General Store": [
-        { name: 'Casey’s Pizza Slice', price: 3.99, description: 'Slice pizza khas Casey’s' },
-        { name: 'Breakfast Burrito', price: 4.59, description: 'Sarapan cepat saji' },
-        { name: 'Donut Glazed', price: 1.79, description: 'Donut fresh harian' }
+        { name: 'Casey’s Pizza Slice', price: 3.99, description: 'Signature pizza slice Casey’s' },
+        { name: 'Breakfast Burrito', price: 4.59, description: 'Quick breakfast burrito' },
+        { name: 'Donut Glazed', price: 1.79, description: 'Donut fresh daily' }
       ],
       Speedway: [
-        { name: 'Speedy Melt', price: 5.29, description: 'Sandwich melt siap santap' },
-        { name: 'Buffalo Chips', price: 2.69, description: 'Keripik pedas gurih' },
-        { name: 'Mocha Latte', price: 3.49, description: 'Kopi mocha creamy' }
+        { name: 'Speedy Melt', price: 5.29, description: 'Sandwich melt ready-to-eat' },
+        { name: 'Buffalo Chips', price: 2.69, description: 'Keripik spicy savory' },
+        { name: 'Mocha Latte', price: 3.49, description: 'Coffee mocha creamy' }
       ],
       Arco: [
-        { name: 'Burrito Supreme', price: 5.59, description: 'Burrito isi daging dan keju' },
+        { name: 'Burrito Supreme', price: 5.59, description: 'Burrito filled with meat dan cheese' },
         { name: 'Onion Rings', price: 3.19, description: 'Onion rings crispy' },
-        { name: 'Vanilla Shake', price: 3.69, description: 'Milkshake vanilla dingin' }
+        { name: 'Vanilla Shake', price: 3.69, description: 'Milkshake vanilla cold' }
       ],
-      Sinclair: [
-        { name: 'Dino Dog', price: 3.49, description: 'Hot dog khas Sinclair' },
-        { name: 'Ranch Crackers', price: 2.39, description: 'Cracker gurih rasa ranch' },
-        { name: 'Iced Latte', price: 3.29, description: 'Latte dingin creamy' }
+      Sinclwater: [
+        { name: 'Dino Dog', price: 3.49, description: 'Hot dog signature Sinclwater' },
+        { name: 'Ranch Crackers', price: 2.39, description: 'Cracker savory flavored ranch' },
+        { name: 'Iced Latte', price: 3.29, description: 'Latte cold creamy' }
       ],
       Citgo: [
-        { name: 'Chicken Quesadilla', price: 5.89, description: 'Quesadilla ayam hangat' },
-        { name: 'BBQ Corn Chips', price: 2.59, description: 'Snack jagung BBQ' },
-        { name: 'Sparkling Water', price: 1.99, description: 'Air soda tanpa gula' }
+        { name: 'Chicken Quesadilla', price: 5.89, description: 'Quesadilla chicken hot' },
+        { name: 'BBQ Corn Chips', price: 2.59, description: 'Snack corn BBQ' },
+        { name: 'Sparkling Water', price: 1.99, description: 'Water soda tanpa gula' }
       ],
       'Gulf (US)': [
         { name: 'Lobster Roll Snack', price: 6.49, description: 'Sandwich seafood mini style East Coast' },
-        { name: 'Sea Salt Pretzel', price: 2.49, description: 'Pretzel garam laut' },
-        { name: 'Iced Black Coffee', price: 2.99, description: 'Kopi hitam dingin' }
+        { name: 'Sea Salt Pretzel', price: 2.49, description: 'Sea salt pretzel' },
+        { name: 'Iced Black Coffee', price: 2.99, description: 'Cold black coffee' }
       ],
       Maverick: [
-        { name: 'Adventure Burrito', price: 5.79, description: 'Burrito isi lengkap untuk roadtrip' },
-        { name: 'Trail Mix', price: 3.29, description: 'Camilan hiking mix' },
-        { name: 'Electrolyte Drink', price: 2.49, description: 'Minuman rehidrasi cepat' }
+        { name: 'Adventure Burrito', price: 5.79, description: 'Burrito filled with loaded for roadtrip' },
+        { name: 'Trail Mix', price: 3.29, description: 'Snack hiking mix' },
+        { name: 'Electrolyte Drink', price: 2.49, description: 'Drink rehidrasi quick' }
       ]
     };
 
     const ukSnackByStation: Record<string, Array<{ name: string; price: number; description: string }>> = {
       BP: [
-        { name: 'Wild Bean Coffee', price: 3.3, description: 'Kopi signature Wild Bean Cafe' },
-        { name: 'Bacon Bap', price: 4.1, description: 'Roti isi bacon hangat' },
-        { name: 'Shortbread', price: 1.8, description: 'Biskuit butter UK style' }
+        { name: 'Wild Bean Coffee', price: 3.3, description: 'Coffee signature Wild Bean Cafe' },
+        { name: 'Bacon Bap', price: 4.1, description: 'Roti filled with bacon hot' },
+        { name: 'Shortbread', price: 1.8, description: 'UK style butter biscuit' }
       ],
       'Shell (UK)': [
-        { name: 'Costa Latte', price: 3.2, description: 'Kopi Costa on-the-go' },
-        { name: 'Sausage Roll', price: 2.4, description: 'Pastry gurih favorit UK' },
-        { name: 'Walkers Crisps', price: 1.6, description: 'Crisps klasik UK' }
+        { name: 'Costa Latte', price: 3.2, description: 'Coffee Costa on-the-go' },
+        { name: 'Sausage Roll', price: 2.4, description: 'UK favorite savory pastry' },
+        { name: 'Walkers Crisps', price: 1.6, description: 'Crisps classic UK' }
       ],
       Esso: [
         { name: 'Flat White', price: 3.1, description: 'Flat white creamy' },
-        { name: 'Ham & Cheese Croissant', price: 3.9, description: 'Croissant isi ham keju' },
-        { name: 'Flapjack', price: 1.9, description: 'Snack oat manis' }
+        { name: 'Ham & Cheese Croissant', price: 3.9, description: 'Croissant filled with ham cheese' },
+        { name: 'Flapjack', price: 1.9, description: 'Snack oat sweet' }
       ],
       'Texaco (UK)': [
-        { name: 'Chicken Bake', price: 4.2, description: 'Pastry isi ayam' },
-        { name: 'Cheddar Crisps', price: 1.5, description: 'Crisps keju' },
-        { name: 'Peach Iced Tea', price: 2.2, description: 'Teh peach dingin' }
+        { name: 'Chicken Bake', price: 4.2, description: 'Pastry filled with chicken' },
+        { name: 'Cheddar Crisps', price: 1.5, description: 'Crisps cheese' },
+        { name: 'Peach Iced Tea', price: 2.2, description: 'Tea peach cold' }
       ],
       Jet: [
-        { name: 'Toasted Panini', price: 4.4, description: 'Panini panggang isi ayam' },
-        { name: 'Salt & Vinegar Crisps', price: 1.4, description: 'Crisps rasa klasik UK' },
-        { name: 'Latte Can', price: 2.5, description: 'Kopi latte kaleng' }
+        { name: 'Toasted Panini', price: 4.4, description: 'Panini grilled filled with chicken' },
+        { name: 'Salt & Vinegar Crisps', price: 1.4, description: 'Crisps flavored classic UK' },
+        { name: 'Latte Can', price: 2.5, description: 'Coffee latte canned' }
       ],
       Murco: [
-        { name: 'Cornish Pasty', price: 3.8, description: 'Pasty tradisional Inggris' },
-        { name: 'Chocolate Digestive', price: 1.7, description: 'Biskuit cokelat UK' },
-        { name: 'Apple Juice', price: 2.1, description: 'Jus apel dingin' }
+        { name: 'Cornish Pasty', price: 3.8, description: 'Pasty tradfilled withonal Inggris' },
+        { name: 'Chocolate Digestive', price: 1.7, description: 'Biskuit chocolate UK' },
+        { name: 'Apple Juice', price: 2.1, description: 'Juice apple cold' }
       ],
       'Gulf (UK)': [
-        { name: 'Steak Slice', price: 4.1, description: 'Pastry isi daging steak' },
-        { name: 'Cheese Twist', price: 2.2, description: 'Roti twist keju' },
-        { name: 'Americano', price: 2.9, description: 'Kopi hitam panas' }
+        { name: 'Steak Slice', price: 4.1, description: 'Pastry filled with meat steak' },
+        { name: 'Cheese Twist', price: 2.2, description: 'Roti twist cheese' },
+        { name: 'Americano', price: 2.9, description: 'Hot black coffee' }
       ],
       TotalEnergies: [
-        { name: 'French Butter Croissant', price: 2.9, description: 'Croissant buttery premium' },
-        { name: 'Ham Baguette', price: 4.6, description: 'Baguette isi ham' },
-        { name: 'Sparkling Lemon', price: 2.2, description: 'Minuman lemon sparkling' }
+        { name: 'French Butter Croissant', price: 2.9, description: 'Premium buttery croissant' },
+        { name: 'Ham Baguette', price: 4.6, description: 'Baguette filled with ham' },
+        { name: 'Sparkling Lemon', price: 2.2, description: 'Sparkling lemon drink' }
       ],
       'Harvest Energy': [
         { name: 'Chicken Tikka Wrap', price: 4.5, description: 'Wrap chicken tikka' },
         { name: 'Mini Sausage Roll', price: 2.3, description: 'Sausage roll mini pack' },
-        { name: 'Mocha', price: 3.0, description: 'Kopi mocha panas' }
+        { name: 'Mocha', price: 3.0, description: 'Coffee mocha hot' }
       ],
       Gleaner: [
-        { name: 'Scottish Pie', price: 3.7, description: 'Pie khas Skotlandia' },
-        { name: 'Shortbread Fingers', price: 1.9, description: 'Shortbread renyah' },
-        { name: 'Irn-Bru', price: 2.0, description: 'Soft drink khas Scotland' }
+        { name: 'Scottish Pie', price: 3.7, description: 'Pie signature Skotlandia' },
+        { name: 'Shortbread Fingers', price: 1.9, description: 'Shortbread crispy' },
+        { name: 'Irn-Bru', price: 2.0, description: 'Soft drink signature Scotland' }
       ],
       Applegreen: [
-        { name: 'Bakewell Slice', price: 2.2, description: 'Pastry manis ala UK/IE' },
-        { name: 'Panini Melt', price: 4.2, description: 'Panini hangat isi keju' },
-        { name: 'Mineral Water', price: 1.3, description: 'Air mineral botol' }
+        { name: 'Bakewell Slice', price: 2.2, description: 'Pastry sweet ala UK/IE' },
+        { name: 'Panini Melt', price: 4.2, description: 'Panini hot filled with cheese' },
+        { name: 'Mineral Water', price: 1.3, description: 'Water mineral botol' }
       ],
       Moto: [
-        { name: 'Roadtrip Wrap', price: 4.5, description: 'Wrap praktis untuk perjalanan' },
-        { name: 'Salted Nuts', price: 2.4, description: 'Kacang asin snack cepat' },
-        { name: 'Cola Zero', price: 1.9, description: 'Soft drink rendah kalori' }
+        { name: 'Roadtrip Wrap', price: 4.5, description: 'Convenient travel wrap' },
+        { name: 'Salted Nuts', price: 2.4, description: 'Quick salted nuts snack' },
+        { name: 'Cola Zero', price: 1.9, description: 'Low calorie soft drink' }
       ],
       'Welcome Break': [
-        { name: 'Hot Panini', price: 4.6, description: 'Panini isi ayam panggang' },
-        { name: 'Muffin Blueberry', price: 2.4, description: 'Muffin blueberry lembut' },
-        { name: 'Cappuccino', price: 3.2, description: 'Cappuccino hangat' }
+        { name: 'Hot Panini', price: 4.6, description: 'Panini filled with chicken grilled' },
+        { name: 'Muffin Blueberry', price: 2.4, description: 'Muffin blueberry soft' },
+        { name: 'Cappuccino', price: 3.2, description: 'Cappuccino hot' }
       ],
       Roadchef: [
-        { name: 'Breakfast Roll', price: 4.3, description: 'Roll sarapan isi telur' },
-        { name: 'Brownie Bite', price: 2.0, description: 'Brownie potong mini' },
-        { name: 'Orange Sparkling', price: 2.1, description: 'Minuman soda jeruk' }
+        { name: 'Breakfast Roll', price: 4.3, description: 'Egg filled breakfast roll' },
+        { name: 'Brownie Bite', price: 2.0, description: 'Mini bite brownie' },
+        { name: 'Orange Sparkling', price: 2.1, description: 'Orange soda drink' }
       ],
       MFG: [
-        { name: 'Deli Sandwich', price: 3.9, description: 'Sandwich deli siap makan' },
-        { name: 'Salted Popcorn', price: 1.8, description: 'Popcorn asin ringan' },
-        { name: 'Iced Latte', price: 2.7, description: 'Latte dingin botolan' }
+        { name: 'Deli Sandwich', price: 3.9, description: 'Sandwich deli ready-to-eat' },
+        { name: 'Salted Popcorn', price: 1.8, description: 'Popcorn salted light' },
+        { name: 'Iced Latte', price: 2.7, description: 'Latte cold bottled' }
       ],
       'EG Group': [
-        { name: 'Chicken Sub', price: 4.7, description: 'Sub ayam isi lengkap' },
-        { name: 'Protein Yogurt', price: 2.6, description: 'Yogurt tinggi protein' },
+        { name: 'Chicken Sub', price: 4.7, description: 'Sub chicken filled with loaded' },
+        { name: 'Protein Yogurt', price: 2.6, description: 'Yogurt high protein' },
         { name: 'Berry Smoothie', price: 3.1, description: 'Smoothie berries' }
       ],
       'Tesco Petrol': [
-        { name: 'Tesco Meal Deal Sandwich', price: 3.5, description: 'Sandwich meal deal populer' },
-        { name: 'Scotch Egg', price: 2.2, description: 'Snack klasik Inggris' },
-        { name: 'Innocent Smoothie', price: 2.8, description: 'Smoothie buah botolan' }
+        { name: 'Tesco Meal Deal Sandwich', price: 3.5, description: 'Sandwich meal deal popular' },
+        { name: 'Scotch Egg', price: 2.2, description: 'Snack classic Inggris' },
+        { name: 'Innocent Smoothie', price: 2.8, description: 'Smoothie fruit bottled' }
       ],
       "Sainsbury's Fuel": [
-        { name: 'Sainsbury Wrap', price: 3.6, description: 'Wrap ayam siap santap' },
-        { name: 'Caramel Shortcake', price: 2.1, description: 'Camilan manis UK' },
-        { name: 'Orange Juice', price: 2.3, description: 'Jus jeruk fresh bottle' }
+        { name: 'Sainsbury Wrap', price: 3.6, description: 'Wrap chicken ready-to-eat' },
+        { name: 'Caramel Shortcake', price: 2.1, description: 'Snack sweet UK' },
+        { name: 'Orange Juice', price: 2.3, description: 'Juice orange fresh bottle' }
       ],
       'Asda Petrol': [
         { name: 'Asda Bakery Donut', price: 1.2, description: 'Donut bakery fresh' },
-        { name: 'Chicken Sandwich', price: 3.4, description: 'Sandwich ayam mayo' },
-        { name: 'Energy Drink', price: 1.9, description: 'Minuman energi dingin' }
+        { name: 'Chicken Sandwich', price: 3.4, description: 'Sandwich chicken mayo' },
+        { name: 'Energy Drink', price: 1.9, description: 'Cold energy drink' }
       ],
       'Morrisons Fuel': [
-        { name: 'Morrisons Pork Pie', price: 2.5, description: 'Pie tradisional UK' },
-        { name: 'Cheese & Onion Crisp', price: 1.4, description: 'Crisps rasa UK populer' },
-        { name: 'Iced Coffee', price: 2.6, description: 'Kopi susu dingin' }
+        { name: 'Morrisons Pork Pie', price: 2.5, description: 'Pie tradfilled withonal UK' },
+        { name: 'Cheese & Onion Crisp', price: 1.4, description: 'Crisps flavored UK popular' },
+        { name: 'Iced Coffee', price: 2.6, description: 'Coffee susu cold' }
       ],
       'Costco Fuel UK': [
         { name: 'Hot Dog Combo UK', price: 1.5, description: 'Combo hot dog food court' },
-        { name: 'Chicken Bake UK', price: 3.8, description: 'Chicken bake khas Costco' },
-        { name: 'Berry Sundae', price: 2.3, description: 'Sundae buah beri' }
+        { name: 'Chicken Bake UK', price: 3.8, description: 'Chicken bake signature Costco' },
+        { name: 'Berry Sundae', price: 2.3, description: 'Sundae fruit beri' }
       ],
       Pace: [
-        { name: 'Meat Pie', price: 3.6, description: 'Pie daging hangat' },
-        { name: 'Butter Cookies', price: 1.9, description: 'Cookies butter renyah' },
-        { name: 'Black Tea', price: 2.0, description: 'Teh hitam botolan' }
+        { name: 'Meat Pie', price: 3.6, description: 'Hot meat pie' },
+        { name: 'Butter Cookies', price: 1.9, description: 'Crispy butter cookies' },
+        { name: 'Black Tea', price: 2.0, description: 'Bottled black tea' }
       ],
       Rix: [
-        { name: 'Hull Sausage Roll', price: 3.1, description: 'Sausage roll lokal' },
-        { name: 'Oat Biscuits', price: 1.7, description: 'Biskuit oat ringan' },
-        { name: 'Milk Coffee', price: 2.6, description: 'Kopi susu dingin' }
+        { name: 'Hull Sausage Roll', price: 3.1, description: 'Local sausage roll' },
+        { name: 'Oat Biscuits', price: 1.7, description: 'Biskuit oat light' },
+        { name: 'Milk Coffee', price: 2.6, description: 'Coffee susu cold' }
       ],
       Essar: [
-        { name: 'Industrial Breakfast Muffin', price: 4.4, description: 'Muffin sarapan isi telur' },
-        { name: 'Cheese Crackers', price: 1.8, description: 'Cracker keju gurih' },
-        { name: 'Energy Tea', price: 2.4, description: 'Teh energi lemon' }
+        { name: 'Industrial Breakfast Muffin', price: 4.4, description: 'Egg filled breakfast muffin' },
+        { name: 'Cheese Crackers', price: 1.8, description: 'Savory cheese crackers' },
+        { name: 'Energy Tea', price: 2.4, description: 'Lemon energy tea' }
       ],
       Maxol: [
-        { name: 'Irish Sausage Roll', price: 3.4, description: 'Sausage roll gaya Irlandia' },
-        { name: 'Potato Crisps', price: 1.6, description: 'Crisps kentang asin' },
-        { name: 'Iced Americano', price: 2.9, description: 'Americano dingin' }
+        { name: 'Irish Sausage Roll', price: 3.4, description: 'Irish style sausage roll' },
+        { name: 'Potato Crisps', price: 1.6, description: 'Crisps potato salted' },
+        { name: 'Iced Americano', price: 2.9, description: 'Americano cold' }
       ]
     };
 
@@ -1167,7 +1167,7 @@ const HomeScreen = () => {
         {showGreeting && (
           <div className="fixed top-0 left-0 right-0 z-50 animate-slide-down">
             <div className="bg-white dark:bg-black border-b border-gray-200 dark:border-gray-800 px-4 py-3 shadow-sm">
-              <div className="flex items-center justify-center">
+              <div className="flex items-center juicetify-center">
                 <div className="text-gray-900 font-medium">
                   {greetingMessage}
                 </div>
@@ -1182,7 +1182,7 @@ const HomeScreen = () => {
           <div className="h-[38px] bg-white"></div>
 
           {/* Header - sesuai Figma */}
-          <div className="flex justify-between items-center px-4 py-3">
+          <div className="flex juicetify-between items-center px-4 py-3">
             <div className="flex items-center gap-3 flex-1">
               <TapEffectButton
                 onClick={() => navigate('/profile')}
@@ -1218,7 +1218,7 @@ const HomeScreen = () => {
               <div className="relative">
                 <button
                   onClick={() => setShowLocationModal(true)}
-                  className="w-7 h-7 bg-gray-100 rounded-full flex items-center justify-center hover:bg-gray-200 transition-colors flex-shrink-0"
+                  className="w-7 h-7 bg-gray-100 rounded-full flex items-center juicetify-center hover:bg-gray-200 transition-colors flex-shrink-0"
                 >
                   {selectedLocation === 'UK' ? (
                     <img
@@ -1244,7 +1244,7 @@ const HomeScreen = () => {
 
               <TapEffectButton
                 onClick={() => navigate('/notifications')}
-                className="w-7 h-7 bg-gray-100 rounded-full flex items-center justify-center hover:bg-gray-200 transition-colors relative flex-shrink-0"
+                className="w-7 h-7 bg-gray-100 rounded-full flex items-center juicetify-center hover:bg-gray-200 transition-colors relative flex-shrink-0"
                 rippleColor="rgba(156, 163, 175, 0.3)"
                 scaleEffect={false}
               >
@@ -1253,7 +1253,7 @@ const HomeScreen = () => {
                   <path d="M13.73 21a2 2 0 0 1-3.46 0" />
                 </svg>
                 {3 > 0 && (
-                  <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full flex items-center justify-center">
+                  <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full flex items-center juicetify-center">
                     <span className="text-white text-xs font-bold">3</span>
                   </span>
                 )}
@@ -1285,7 +1285,7 @@ const HomeScreen = () => {
               </div>
               <button
                 onClick={() => setShowFilters(!showFilters)}
-                className={`w-12 h-12 border border-gray-300 rounded-full flex items-center justify-center transition-colors shadow-sm ${showFilters || Object.values(filters).some(f => f)
+                className={`w-12 h-12 border border-gray-300 rounded-full flex items-center juicetify-center transition-colors shadow-sm ${showFilters || Object.values(filters).some(f => f)
                   ? 'bg-[#3AC36C] text-white'
                   : 'bg-[#E3FFEE] hover:bg-[#d1f7dd] text-[#3F4249]'
                   }`}
@@ -1303,7 +1303,7 @@ const HomeScreen = () => {
                     className="w-full text-left px-4 py-3 border-b border-gray-100 last:border-0 hover:bg-gray-50 flex items-center gap-3 transition-colors"
                     onClick={() => handleSuggestionClick(item)}
                   >
-                    <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0">
+                    <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center juicetify-center flex-shrink-0">
                       {item.type === 'station' ? <Fuel size={16} className="text-[#3AC36C]" /> : <ShoppingBag size={16} className="text-orange-500" />}
                     </div>
                     <div>
@@ -1321,7 +1321,7 @@ const HomeScreen = () => {
           {showFilters && (
             <div className="px-4 pb-3">
               <div className="bg-gray-50 rounded-2xl p-4 space-y-4">
-                <div className="flex justify-between items-center">
+                <div className="flex juicetify-between items-center">
                   <h3 className="font-semibold text-[#3F4249]">Filters</h3>
                   <button
                     onClick={clearFilters}
@@ -1434,7 +1434,7 @@ const HomeScreen = () => {
         </div>
 
         {showLocationModal && createPortal(
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4">
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center juicetify-center z-[9999] p-4">
             <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-2xl">
               <div className="text-center mb-6">
                 <h2 className="text-2xl font-bold text-gray-900 mb-2">Welcome!</h2>

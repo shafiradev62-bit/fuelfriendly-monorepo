@@ -10,7 +10,10 @@ import Button from '../components/Button';
 import TouchFeedback from '../components/TouchFeedback';
 import TapEffectButton from '../components/TapEffectButton';
 import SubscriptionPlans from '../components/SubscriptionPlans';
-import { validateTIN, formatTIN, cleanTIN } from '../utils/tinValidator';
+import { validateTIN, formatTIN, cleanTIN, TIN_CONFIGS, CountryCode } from '../utils/tinValidator';
+
+// Get version mode from environment
+const VERSION_MODE = import.meta.env.VITE_VERSION_MODE || 'global';
 
 // Module-level OTP store — survives re-renders and step changes reliably
 const _otpStore: { code: string; ts: number; email: string } = { code: '', ts: 0, email: '' };
@@ -154,7 +157,7 @@ const CustomModalSelect = ({ label, value, options, onChange, placeholder, isDat
                             )}
                         </div>
                         <div className="p-6 bg-gray-50/30">
-                            <button onClick={() => setIsOpen(false)} className="w-full py-4 bg-gray-900 text-white rounded-full font-bold text-lg active:scale-95 transition-all shadow-lg">Close</button>
+                            <button onClick={() => setIsOpen(false)} className="w-full py-4 bg-[#3AC36C] text-white rounded-full font-bold text-lg active:scale-95 transition-all shadow-lg hover:bg-green-600">Close</button>
                         </div>
                     </div>
                 </div>
@@ -176,6 +179,7 @@ const RegistrationScreen = () => {
         email: '',
         phone: '',
         tin: '',
+        tinCountry: 'US' as CountryCode,
         password: '',
         ageProofFileName: '',
         ageProofDataUrl: '',
@@ -195,9 +199,16 @@ const RegistrationScreen = () => {
     }, [formData]);
 
     useEffect(() => {
-        const prefill = (location.state as any)?.prefill;
+        const state = location.state as any;
+        if (!state) return;
+
+        if (state.step) {
+            setStep(state.step);
+        }
+
+        const prefill = state.prefill;
         if (!prefill || typeof prefill !== 'object') return;
-        setStep(1);
+        // setStep(1); // Removed to respect state.step if provided
         setFormData((prev) => ({
             ...prev,
             fullName: prefill.fullName || prev.fullName,
@@ -206,17 +217,11 @@ const RegistrationScreen = () => {
         }));
     }, [location.state]);
 
-    // Load subscription plans on component mount
+    // Load subscription plans in background (non-blocking)
     useEffect(() => {
-        const loadSubscriptionPlans = async () => {
-            try {
-                const plans = await apiGetSubscriptionPlans();
-                setSubscriptionPlans(plans);
-            } catch (error) {
-                console.error('Failed to load subscription plans:', error);
-            }
-        };
-        loadSubscriptionPlans();
+        apiGetSubscriptionPlans()
+            .then(plans => setSubscriptionPlans(plans))
+            .catch(() => {}); // silent fail - not critical for sign up
     }, []);
 
     const handleNext = () => {
@@ -323,6 +328,7 @@ const RegistrationScreen = () => {
         try {
             setLoading(true);
             const googleLoginResult = await loginWithGoogle();
+            
             if (googleLoginResult?.isNewUser) {
                 const prefill = googleLoginResult?.profile || {};
                 setStep(1);
@@ -334,6 +340,22 @@ const RegistrationScreen = () => {
                 }));
                 return;
             }
+
+            // Existing user - Check for incomplete profile
+            const user = googleLoginResult.customer;
+            if (!user.vehicles || user.vehicles.length === 0) {
+                // Incomplete -> Pre-fill and go to step 2
+                setFormData((prev) => ({
+                    ...prev,
+                    fullName: user.fullName || prev.fullName,
+                    email: user.email || prev.email,
+                    phone: user.phone || prev.phone
+                }));
+                setStep(2);
+                return;
+            }
+            
+            // Complete profile -> Go to Home
             navigate('/home');
         } catch (googleError: any) {
             setError(googleError?.message || 'Google registration failed');
@@ -469,43 +491,149 @@ const Step1 = ({ next, formData, handleChange, onGoogleSignIn, handleAgeProofUpl
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [confirmPassword, setConfirmPassword] = useState('');
     const [tinError, setTinError] = useState('');
+    const [ageProofPreview, setAgeProofPreview] = useState<string | null>(null);
+    const [uploadProgress, setUploadProgress] = useState(0);
+    const ageProofInputRef = useRef<HTMLInputElement | null>(null);
+
+    const selectedCountry = formData.tinCountry || 'US';
+
+    // Filter countries based on version mode
+    const availableCountries: CountryCode[] = VERSION_MODE === 'strict' 
+        ? ['US', 'UK'] 
+        : ['US', 'UK', 'GLOBAL'];
+
+    useEffect(() => {
+        if (formData?.ageProofDataUrl && String(formData.ageProofDataUrl).startsWith('data:image/')) {
+            setAgeProofPreview(formData.ageProofDataUrl);
+        } else {
+            setAgeProofPreview(null);
+        }
+    }, [formData?.ageProofDataUrl]);
 
     const handleTINChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        let value = e.target.value;
-
-        // FLEKSIBEL: Boleh huruf dan angka, tidak strict digits only
-        const cleaned = cleanTIN(value);
-
-        // FLEKSIBEL: Auto-format yang lebih simpel
-        if (cleaned.length <= 15) {
-            if (cleaned.length === 9 && /^\d+$/.test(cleaned)) {
-                // Format untuk 9 digit angka: XXX-XX-XXXX
-                value = `${cleaned.substring(0, 3)}-${cleaned.substring(3, 5)}-${cleaned.substring(5)}`;
-            } else if (cleaned.length === 10 && /^\d+$/.test(cleaned)) {
-                // Format untuk 10 digit angka: XXX-XXX-XXXX
-                value = `${cleaned.substring(0, 3)}-${cleaned.substring(3, 6)}-${cleaned.substring(6)}`;
-            } else if (cleaned.length > 10 && /^\d+$/.test(cleaned)) {
-                // Format untuk >10 digit: XXXXX XXXXXX (belah dua)
-                const mid = Math.floor(cleaned.length / 2);
-                value = `${cleaned.substring(0, mid)} ${cleaned.substring(mid)}`;
-            } else if (/^[A-Z0-9]+$/.test(cleaned)) {
-                // Format alphanumeric: spasi tiap 4 karakter
-                value = cleaned.replace(/(.{4})/g, '$1 ').trim();
-            } else {
-                value = cleaned;
-            }
-        }
+        const value = e.target.value;
+        const formatted = formatTIN(value, selectedCountry);
 
         // Clear error when user types
         setTinError('');
 
         // Update form data
-        const event = { target: { name: 'tin', value } } as React.ChangeEvent<HTMLInputElement>;
+        const event = { target: { name: 'tin', value: formatted } } as React.ChangeEvent<HTMLInputElement>;
         handleChange(event);
+    };
+
+    const handleCountryChange = (country: string) => {
+        const code = country as CountryCode;
+        // Update form data with new country
+        handleChange({ target: { name: 'tinCountry', value: code } } as any);
+        
+        // Re-format current TIN with new country rules
+        if (formData.tin) {
+            const formatted = formatTIN(formData.tin, code);
+            handleChange({ target: { name: 'tin', value: formatted } } as any);
+        }
+    };
+
+    const handleEnhancedAgeProofUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'application/pdf', 'image/heic', 'image/heif'];
+        const lowerName = String(file.name || '').toLowerCase();
+        const allowedByExt = ['.jpg', '.jpeg', '.png', '.webp', '.pdf', '.heic', '.heif'].some(ext => lowerName.endsWith(ext));
+        if (!allowedTypes.includes(file.type) && !allowedByExt) {
+            setError('Please upload a valid image (JPG, PNG, WEBP) or PDF file.');
+            return;
+        }
+
+        const maxSize = 5 * 1024 * 1024; // 5MB
+        if (file.size > maxSize) {
+            setError('File size must be under 5MB.');
+            return;
+        }
+
+        // Simulate upload progress
+        setUploadProgress(0);
+        const progressInterval = setInterval(() => {
+            setUploadProgress(prev => {
+                if (prev >= 90) {
+                    clearInterval(progressInterval);
+                    return 90;
+                }
+                return prev + 10;
+            });
+        }, 100);
+
+        const reader = new FileReader();
+        reader.onload = () => {
+            const result = String(reader.result || '');
+            
+            // Set preview for images only
+            if (file.type.startsWith('image/')) {
+                setAgeProofPreview(result);
+            } else {
+                setAgeProofPreview(null); // PDF doesn't show preview
+            }
+
+            // Update form data
+            const event = {
+                target: {
+                    name: 'ageProofFileName',
+                    value: file.name
+                }
+            } as any;
+            handleChange(event);
+
+            const dataEvent = {
+                target: {
+                    name: 'ageProofDataUrl',
+                    value: result
+                }
+            } as any;
+            handleChange(dataEvent);
+
+            // Complete progress
+            clearInterval(progressInterval);
+            setUploadProgress(100);
+            setTimeout(() => setUploadProgress(0), 1000);
+            setError('');
+        };
+
+        reader.onerror = () => {
+            setError('Failed to read file. Please try again.');
+            clearInterval(progressInterval);
+            setUploadProgress(0);
+        };
+
+        reader.readAsDataURL(file);
+    };
+
+    const removeAgeProof = () => {
+        setAgeProofPreview(null);
+        const fileNameEvent = {
+            target: { name: 'ageProofFileName', value: '' }
+        } as any;
+        handleChange(fileNameEvent);
+        
+        const dataEvent = {
+            target: { name: 'ageProofDataUrl', value: '' }
+        } as any;
+        handleChange(dataEvent);
+        
+        if (ageProofInputRef.current) ageProofInputRef.current.value = '';
     };
 
     const handleFormSubmit = (e: React.FormEvent) => {
         e.preventDefault();
+        
+        // Validate TIN
+        const validation = validateTIN(formData.tin, selectedCountry);
+        if (!validation.isValid) {
+            setTinError(validation.errorMessage);
+            // Scroll to TIN if possible or just show error
+            return;
+        }
+
         if (formData.password !== confirmPassword) {
             setError("Passwords do not match!");
             return;
@@ -556,31 +684,135 @@ const Step1 = ({ next, formData, handleChange, onGoogleSignIn, handleAgeProofUpl
                     required
                 />
 
-                <input
-                    name="tin"
-                    type="text"
-                    placeholder="TIN / Tax ID (optional)"
-                    value={formData.tin}
-                    onChange={handleTINChange}
-                    className="w-full mobile-form-input rounded-full border border-black/50 bg-white focus:outline-none focus:ring-2 focus:ring-green-500 placeholder-gray-400 transition-all"
-                />
+                <div className="space-y-3">
+                    <CustomModalSelect
+                        label="Select TIN Country"
+                        value={TIN_CONFIGS[selectedCountry].label}
+                        options={availableCountries.map(code => TIN_CONFIGS[code].label)}
+                        onChange={(label) => {
+                            const code = (Object.keys(TIN_CONFIGS) as CountryCode[]).find(c => TIN_CONFIGS[c].label === label);
+                            if (code) handleCountryChange(code);
+                        }}
+                        placeholder="Select TIN Country"
+                    />
+
+                    <div className="relative">
+                        <input
+                            name="tin"
+                            type="text"
+                            placeholder={TIN_CONFIGS[selectedCountry].placeholder}
+                            value={formData.tin}
+                            onChange={handleTINChange}
+                            className={`w-full mobile-form-input rounded-full border bg-white focus:outline-none focus:ring-2 focus:ring-green-500 placeholder-gray-400 transition-all ${tinError ? 'border-red-500' : 'border-black/50'
+                                }`}
+                        />
+                        {tinError && (
+                            <p className="text-red-500 text-xs mt-1 ml-4 font-medium">{tinError}</p>
+                        )}
+                        <p className="text-gray-400 text-[10px] mt-1 ml-4">
+                            {TIN_CONFIGS[selectedCountry].description}
+                        </p>
+                    </div>
+                </div>
 
                 <div>
                     <input
                         type="file"
                         id="age-proof-upload"
-                        accept=".jpg,.jpeg,.png,.webp,.pdf"
+                        accept=".jpg,.jpeg,.png,.webp,.pdf,.heic,.heif,image/*,application/pdf"
                         className="hidden"
-                        onChange={(e) => handleAgeProofUpload && handleAgeProofUpload(e)}
+                        ref={ageProofInputRef}
+                        onChange={handleEnhancedAgeProofUpload}
                     />
-                    <label
-                        htmlFor="age-proof-upload"
-                        className="w-full mobile-form-input rounded-full border border-black/50 bg-white focus:outline-none focus:ring-2 focus:ring-green-500 placeholder-gray-400 flex items-center justify-between cursor-pointer"
-                    >
-                        <span className={`${formData.ageProofFileName ? 'text-gray-700' : 'text-gray-400'}`}>
-                            {formData.ageProofFileName || 'Upload age proof (18+)'}
-                        </span>
-                    </label>
+                    
+                    {!formData.ageProofFileName ? (
+                        <button
+                            type="button"
+                            onClick={() => ageProofInputRef.current?.click()}
+                            className="w-full mobile-form-input rounded-2xl border-2 border-dashed border-gray-300 bg-gray-50 hover:bg-gray-100 hover:border-[#3AC36C] transition-all cursor-pointer flex flex-col items-center justify-center py-8 px-4"
+                        >
+                            <svg className="w-12 h-12 text-gray-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                            </svg>
+                            <span className="text-gray-600 font-medium mb-1">Upload Age Proof (18+)</span>
+                            <span className="text-gray-400 text-sm">Driver's License, ID Card, or Passport</span>
+                            <span className="text-gray-400 text-xs mt-2">JPG, PNG, WEBP, HEIC, HEIF or PDF (Max 5MB)</span>
+                        </button>
+                    ) : (
+                        <div className="w-full rounded-2xl border-2 border-[#3AC36C] bg-green-50 p-4">
+                            {ageProofPreview ? (
+                                <div className="space-y-3">
+                                    <div className="relative rounded-lg overflow-hidden bg-white">
+                                        <img 
+                                            src={ageProofPreview} 
+                                            alt="Age proof preview" 
+                                            className="w-full h-48 object-contain"
+                                        />
+                                    </div>
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center space-x-2">
+                                            <svg className="w-5 h-5 text-[#3AC36C]" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                                            </svg>
+                                            <span className="text-sm font-medium text-gray-700 truncate max-w-[200px]">
+                                                {formData.ageProofFileName}
+                                            </span>
+                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={removeAgeProof}
+                                            className="text-red-500 hover:text-red-700 p-2 rounded-full hover:bg-red-100 transition-colors"
+                                        >
+                                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center space-x-3">
+                                        <div className="p-2 bg-red-100 rounded-lg">
+                                            <svg className="w-6 h-6 text-red-600" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clipRule="evenodd" />
+                                            </svg>
+                                        </div>
+                                        <div>
+                                            <p className="text-sm font-medium text-gray-700 truncate max-w-[180px]">
+                                                {formData.ageProofFileName}
+                                            </p>
+                                            <p className="text-xs text-gray-500">PDF Document</p>
+                                        </div>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={removeAgeProof}
+                                        className="text-red-500 hover:text-red-700 p-2 rounded-full hover:bg-red-100 transition-colors"
+                                    >
+                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                        </svg>
+                                    </button>
+                                </div>
+                            )}
+                            
+                            {uploadProgress > 0 && uploadProgress < 100 && (
+                                <div className="mt-3">
+                                    <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+                                        <div 
+                                            className="bg-[#3AC36C] h-2 rounded-full transition-all duration-300"
+                                            style={{ width: `${uploadProgress}%` }}
+                                        />
+                                    </div>
+                                    <p className="text-xs text-gray-500 mt-1 text-center">Uploading... {uploadProgress}%</p>
+                                </div>
+                            )}
+                        </div>
+                    )}
+                    
+                    <p className="text-xs text-gray-500 mt-2 px-2">
+                        We need to verify you're 18+ to comply with age restrictions for fuel delivery services.
+                    </p>
                 </div>
 
                 <div className="relative">
@@ -834,7 +1066,7 @@ const Step3 = ({ formData, loading, error, setError, selectedSubscription, setSe
                         <span className="text-gray-800 font-medium">••••••••</span>
                     </div>
                     <div className="flex justify-between items-center pb-2 border-b border-dotted border-gray-300">
-                        <span className="text-gray-600 font-medium">TIN</span>
+                        <span className="text-gray-600 font-medium">TIN ({TIN_CONFIGS[formData.tinCountry as CountryCode || 'US'].label})</span>
                         <span className="text-gray-800 font-medium">{formData.tin || '-'}</span>
                     </div>
                     <div className="flex justify-between items-center pb-2 border-b border-dotted border-gray-300">

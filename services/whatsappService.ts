@@ -57,10 +57,11 @@ export const getQRCode = async (): Promise<{
 };
 
 /**
- * Send OTP via WhatsApp - Direct message without OTP provider
+ * Send OTP via WhatsApp - Direct message without OTP provider (only after email verification)
  * @param phoneNumber - Phone number in international format (e.g., +628123456789)
+ * @param email - User email for verification check
  */
-export const sendWhatsAppOTP = async (phoneNumber: string): Promise<{
+export const sendWhatsAppOTP = async (phoneNumber: string, email?: string): Promise<{
   success: boolean;
   message: string;
   otp?: string;
@@ -68,6 +69,26 @@ export const sendWhatsAppOTP = async (phoneNumber: string): Promise<{
   error?: string;
 }> => {
   try {
+    // Check email verification first
+    if (email) {
+      const authBase = import.meta.env.VITE_API_BASE_URL || "https://apidecor.kelolahrd.life";
+      const checkResponse = await fetch(`${authBase}/api/auth/check-email-verification`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      
+      const checkResult = await checkResponse.json();
+      
+      if (!checkResponse.ok || !checkResult.isEmailVerified) {
+        return { 
+          success: false, 
+          message: 'Email must be verified before WhatsApp verification',
+          error: 'Email must be verified before WhatsApp verification'
+        };
+      }
+    }
+
     const { data } = await whatsappApi.post('/send-otp', { phoneNumber });
     return data;
   } catch (error: any) {
@@ -305,7 +326,7 @@ export const completeWhatsAppOneTapVerification = async (phoneNumber: string): P
 };
 
 /**
- * Send order confirmation via WhatsApp
+ * Send order confirmation via WhatsApp - DISABLED for groceries details
  * @param phoneNumber - Phone number in international format
  * @param orderDetails - Order details including orderId, items, total, address, deliveryTime
  */
@@ -323,24 +344,17 @@ export const sendOrderConfirmation = async (
   message: string;
   error?: string;
 }> => {
-  try {
-    const { data } = await whatsappApi.post('/send-order-confirmation', {
-      phoneNumber,
-      orderDetails
-    });
-    return data;
-  } catch (error: any) {
-    console.error('Failed to send order confirmation:', error);
-    return {
-      success: false,
-      message: error.response?.data?.error || 'Failed to send order confirmation',
-      error: error.response?.data?.error || 'Failed to send order confirmation'
-    };
-  }
+  // DISABLED: No WhatsApp notifications for groceries details
+  console.log('WhatsApp order confirmation disabled for groceries details');
+  return {
+    success: false,
+    message: 'WhatsApp notifications for groceries details are disabled',
+    error: 'WhatsApp notifications for groceries details are disabled'
+  };
 };
 
 /**
- * Send custom notification via WhatsApp
+ * Send custom notification via WhatsApp - DISABLED for non-essential notifications
  * @param phoneNumber - Phone number in international format
  * @param title - Notification title (optional)
  * @param message - Notification message
@@ -354,21 +368,13 @@ export const sendWhatsAppNotification = async (
   message: string;
   error?: string;
 }> => {
-  try {
-    const { data } = await whatsappApi.post('/send-notification', {
-      phoneNumber,
-      title,
-      message
-    });
-    return data;
-  } catch (error: any) {
-    console.error('Failed to send WhatsApp notification:', error);
-    return {
-      success: false,
-      message: error.response?.data?.error || 'Failed to send notification',
-      error: error.response?.data?.error || 'Failed to send notification'
-    };
-  }
+  // DISABLED: No WhatsApp notifications for non-essential details
+  console.log('WhatsApp notification disabled for non-essential details');
+  return {
+    success: false,
+    message: 'WhatsApp notifications for non-essential details are disabled',
+    error: 'WhatsApp notifications for non-essential details are disabled'
+  };
 };
 
 /**

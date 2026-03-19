@@ -1,15 +1,26 @@
 import axios from 'axios';
 
+// Version mode: "strict" (UK/US, real backend) vs "global" (more relaxed)
+const VERSION_MODE = import.meta.env.VITE_VERSION_MODE || 'global';
+
+// Real backend for strict mode (no simulation)
+const REAL_API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://apidecor.kelolahrd.life';
+
+// MockAPI backend kept only for global / relaxed builds
 const MOCK_API_JS_URL = import.meta.env.VITE_MOCKAPI_BASE_URL || 'https://67cbf7e63395520e6af6c5ac.mockapi.io/api/v1';
-const API_BASE_URL = MOCK_API_JS_URL;
-const isMockApiMode = true; // Forced for dynamic testing
+
+const isStrictMode = VERSION_MODE === 'strict';
+
+// In strict mode all requests go to the real API, otherwise we keep using MockAPI
+const API_BASE_URL = isStrictMode ? REAL_API_BASE_URL : MOCK_API_JS_URL;
+const isMockApiMode = !isStrictMode;
 
 const api = axios.create({
   baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json'
   },
-  timeout: 15000
+  timeout: 8000
 });
 
 const apiGet = async <T = any>(url: string, config?: any) => {
@@ -168,7 +179,8 @@ export const apiGoogleAuth = async (googleData: {
 }) => {
   if (isMockApiMode) {
     try {
-      const { data: users } = await api.get(`/users?search=${encodeURIComponent(googleData.email)}`);
+      // Use email directly for search without encoding to ensure MockAPI matches correctly
+      const { data: users } = await api.get(`/users?search=${googleData.email}`);
       const existingUser = Array.isArray(users)
         ? users.find((u: any) => u.email?.toLowerCase() === googleData.email.toLowerCase())
         : null;
@@ -213,6 +225,67 @@ export const apiGoogleAuth = async (googleData: {
       ...payload
     };
   }
+  return {
+    isNewUser: true,
+    profile: {
+      fullName: googleData.displayName,
+      email: googleData.email,
+      phone: '',
+      city: '',
+      avatarUrl: `https://ui-avatars.com/api/?name=${encodeURIComponent(googleData.displayName)}&background=random`,
+      vehicles: []
+    }
+  };
+};
+
+export const apiResolveGoogleUserLocal = async (googleData: {
+  uid: string;
+  email: string;
+  displayName: string;
+}) => {
+  try {
+    // Get all users and search for exact email match
+    const { data: users } = await api.get('/users');
+    const existingUser = Array.isArray(users)
+      ? users.find((u: any) => u.email?.toLowerCase() === googleData.email.toLowerCase())
+      : null;
+
+    if (existingUser) {
+      console.log('🔍 Existing user found:', existingUser.email);
+      return {
+        isNewUser: false,
+        customer: {
+          id: String(existingUser.id),
+          fullName: existingUser.fullName || existingUser.name || googleData.displayName,
+          email: existingUser.email,
+          phone: existingUser.phone || '',
+          city: existingUser.city || '',
+          avatarUrl: existingUser.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(googleData.displayName)}&background=random`,
+          vehicles: existingUser.vehicles || []
+        },
+        token: `mockapi-google-token-${existingUser.id}-${Date.now()}`
+      };
+    }
+  } catch (error) {
+    console.error('❌ Error checking for existing user:', error);
+    const localRaw = localStorage.getItem('user');
+    if (localRaw) {
+      try {
+        const localUser = JSON.parse(localRaw);
+        if (localUser?.email?.toLowerCase() === googleData.email.toLowerCase()) {
+          console.log('🔍 Existing user found in localStorage');
+          return {
+            isNewUser: false,
+            customer: localUser,
+            token: localStorage.getItem('token') || `local-google-token-${Date.now()}`
+          };
+        }
+      } catch {
+      }
+    }
+  }
+
+  console.log('🔍 New user detected:', googleData.email);
   return {
     isNewUser: true,
     profile: {

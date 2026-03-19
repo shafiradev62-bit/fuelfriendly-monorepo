@@ -1,0 +1,79 @@
+{
+  "projectId": "fuel-friend-app",
+  "projectName": "Fuel Friend",
+  "version": "1.0.0",
+  "agents": {
+    "build": {
+      "enabled": true,
+      "platforms": ["ios", "android", "web"],
+      "autoTrigger": true,
+      "schedule": "on-push"
+    },
+    "test": {
+      "enabled": true,
+      "platforms": ["ios", "android", "web"],
+      "parallelExecution": true,
+      "coverageThreshold": 80
+    },
+    "deploy": {
+      "enabled": true,
+      "web": {
+        "provider": "vercel",
+        "auto": true
+      },
+      "ios": {
+        "provider": "testflight",
+        "auto": false,
+        "requireApproval": true
+      },
+      "android": {
+        "provider": "playstore",
+        "track": "internal",
+        "auto": false
+      }
+    }
+  },
+  "remoteAgents": {
+    "default": {
+      "provider": "codex-cloud",
+      "region": "us-east-1",
+      "autoScale": true,
+      "maxInstances": 5
+    },
+    "ios": {
+      "instance": "macos-m1-large",
+      "region": "us-east-1"
+    },
+    "android": {
+      "instance": "ubuntu-22.04-xl",
+      "region": "us-east-1"
+    },
+    "web": {
+      "instance": "ubuntu-22.04",
+      "region": "us-east-1"
+    }
+  },
+  "notifications": {
+    "slack": {
+      "enabled": true,
+      "channel": "#fuel-friend-builds",
+      "events": ["build.started", "build.success", "build.failed", "deploy.completed"]
+    },
+    "email": {
+      "enabled": true,
+      "recipients": ["dev@fuelfriend.com"],
+      "events": ["build.failed", "deploy.completed"]
+    }
+  },
+  "caching": {
+    "enabled": true,
+    "dependencies": true,
+    "buildArtifacts": true,
+    "retention": "30d"
+  },
+  "security": {
+    "scanOnBuild": true,
+    "vulnerabilityCheck": true,
+    "secretsDetection": true
+  }
+}

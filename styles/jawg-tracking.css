@@ -16,6 +16,19 @@
   backface-visibility: hidden;
 }
 
+.car-icon-container svg {
+  filter: drop-shadow(0 4px 8px rgba(58, 195, 108, 0.4));
+}
+
+.car-icon-container .outer-ring {
+ animation: rotate-ring 8s linear infinite;
+}
+
+@keyframes rotate-ring {
+ from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
 .car-icon-container img {
   width: 32px;
   height: auto;
@@ -54,7 +67,7 @@
 
 .tracking-stepper-fill {
   height: 100%;
-  background: linear-gradient(90deg, #6B7280 0%, #4B5563 100%);
+  background: linear-gradient(90deg, #3AC36C 0%, #2da85a 100%);
   transition: width 0.15s linear;
   will-change: width;
 }

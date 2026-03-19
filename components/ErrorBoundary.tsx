@@ -36,13 +36,13 @@ class ErrorBoundary extends Component<Props, State> {
       // Show error details instead of silent redirect for debugging
       return (
         <div className="min-h-screen bg-black text-white p-10 flex flex-col items-center justify-center">
-          <h1 className="text-2xl font-bold mb-4">Something went wrong</h1>
+          <h1 className="text-2xl font-bold mb-4">Application Error</h1>
           <pre className="bg-gray-900 p-4 rounded overflow-auto max-w-full text-xs text-red-400 mb-6">
             {this.state.error?.toString()}
           </pre>
           <button 
             onClick={() => window.location.href = '/home'}
-            className="px-6 py-2 bg-green-500 rounded-full font-bold"
+            className="px-6 py-2 bg-[#3AC36C] hover:bg-[#2da85a] rounded-full font-bold transition-all"
           >
             Back to Home
           </button>
