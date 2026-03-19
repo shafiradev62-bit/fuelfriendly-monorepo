@@ -352,15 +352,15 @@ const TrackOrderScreen = () => {
                  userCity.includes('uk') || 
                  userCity.includes('england');
 
-    const fuelFriendName = 'FuelFriend';
+    const fuelFriendName = currentOrderData?.fuelfriend?.name || 'FuelFriend';
 
     // Try to get fuelfriend data from order
     if (currentOrderData?.fuelfriend) {
       return {
         name: fuelFriendName,
-        location: currentOrderData.fuelfriend.location || currentOrderData.deliveryAddress || 'Waiting for pickup',
+        location: currentOrderData.fuelfriend.location || `On the way to ${currentOrderData.deliveryAddress || 'you'}`,
         phone: currentOrderData.fuelfriend.phone || getRandomRealPhoneNumber(isUK),
-        avatar: '/fuel friend.png' // Always use stable avatar, prevent flickering
+        avatar: currentOrderData.fuelfriend.avatarUrl || currentOrderData.fuelfriend.avatar || '/fuel friend.png'
       };
     }
 
@@ -1239,14 +1239,15 @@ const TrackOrderScreen = () => {
   console.log('Driver data:', driverData);
   console.log('Current order:', currentOrder);
 
-  const routeStart = (currentOrder?.driverLocation?.coordinates ||
-    currentOrder?.driverCoordinates ||
-    currentOrder?.courierCoordinates ||
-    sampleGasToUserRoute.features[0].geometry.coordinates[0]) as [number, number];
+  // Car starts from driver/station location and goes TO user location (like Uber)
   const routeEnd = (currentOrder?.destinationLocation?.coordinates ||
     currentOrder?.deliveryCoordinates ||
     currentOrder?.dropoffCoordinates ||
     sampleGasToUserRoute.features[0].geometry.coordinates[sampleGasToUserRoute.features[0].geometry.coordinates.length - 1]) as [number, number];
+  const routeStart = (currentOrder?.driverLocation?.coordinates ||
+    currentOrder?.driverCoordinates ||
+    currentOrder?.courierCoordinates ||
+    sampleGasToUserRoute.features[0].geometry.coordinates[0]) as [number, number];
   const routeMid1: [number, number] = [
     routeStart[0] + (routeEnd[0] - routeStart[0]) * 0.35 - 0.0042,
     routeStart[1] + (routeEnd[1] - routeStart[1]) * 0.35 + 0.0027
@@ -1543,15 +1544,28 @@ const TrackOrderScreen = () => {
               {/* Driver Information */}
               <div className="driver-info flex items-center justify-between mb-6">
                 <div className="flex items-center gap-3">
-                  <img
-                    src={driverData.avatar}
-                    alt={driverData.name}
-                    className="w-12 h-12 rounded-full object-cover"
-                    onError={(e) => {
-                      e.currentTarget.src = '/fuel friend.png';
-                      e.currentTarget.onerror = null;
-                    }}
-                  />
+                  <div className="relative w-12 h-12 rounded-full overflow-hidden bg-gray-100 flex-shrink-0">
+                    <img
+                      src={driverData.avatar}
+                      alt={driverData.name}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        console.log('Avatar failed to load, using fallback');
+                        e.currentTarget.src = '/fuel friend.png';
+                        e.currentTarget.onerror = () => {
+                          // Second fallback - show placeholder div
+                          e.currentTarget.style.display = 'none';
+                          const parent = e.currentTarget.parentElement;
+                          if (parent && !parent.querySelector('.avatar-fallback')) {
+                            const fallbackDiv = document.createElement('div');
+                            fallbackDiv.className = 'avatar-fallback w-full h-full flex items-center justify-center bg-[#3AC36C] text-white font-bold text-lg';
+                            fallbackDiv.textContent = driverData.name.charAt(0);
+                            parent.appendChild(fallbackDiv);
+                          }
+                        };
+                      }}
+                    />
+                  </div>
                   <div>
                     <h3 className="font-semibold text-gray-900">{driverData.name}</h3>
                     <p className="text-sm text-gray-600">{driverData.location}</p>
