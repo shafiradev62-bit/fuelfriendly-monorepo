@@ -27,6 +27,15 @@ const config: CapacitorConfig = {
       // iOS specific Google Auth configuration
       iosClientId: 'YOUR_IOS_GOOGLE_CLIENT_ID.apps.googleusercontent.com', // Replace with actual iOS client ID from Google Console
     },
+    Camera: {
+      // Camera plugin configuration for QR scanning
+      allowEditing: false,
+      source: 'camera', // Always use camera, not gallery
+      saveToGallery: false,
+      promptLabelHeader: 'Camera Access',
+      promptLabelCancel: 'Cancel',
+      promptLabelPhoto: 'Use Camera',
+    },
   },
   android: {
     allowMixedContent: true,
