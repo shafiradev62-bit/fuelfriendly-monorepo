@@ -734,11 +734,12 @@ const TrackOrderScreen = () => {
   async function setupMapLayers(mapInstance: mapboxgl.Map) {
     console.log('🗺️ Setting up map layers with curved route...');
 
-    const start = (currentOrder?.driverLocation?.coordinates ||
+    // Driver location → User location (Uber style direction)
+    const routeStart = (currentOrder?.driverLocation?.coordinates ||
       currentOrder?.driverCoordinates ||
       currentOrder?.courierCoordinates ||
       [-90.0490, 35.1495]) as [number, number];
-    const end = (currentOrder?.destinationLocation?.coordinates ||
+    const routeEnd = (currentOrder?.destinationLocation?.coordinates ||
       currentOrder?.deliveryCoordinates ||
       currentOrder?.dropoffCoordinates ||
       [-90.0290, 35.1295]) as [number, number];
@@ -748,8 +749,8 @@ const TrackOrderScreen = () => {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 1500); // 1.5s timeout (Reduced for faster fallback)
 
-      // Fetch real route from Mapbox Directions API
-      const response = await apiGetRouteDirections(start as [number, number], end as [number, number], mapboxgl.accessToken);
+      // Fetch real route from Mapbox Directions API - DRIVER → USER (Uber style)
+      const response = await apiGetRouteDirections(routeStart as [number, number], routeEnd as [number, number], mapboxgl.accessToken);
       clearTimeout(timeoutId);
       const data = response;
 
@@ -1019,12 +1020,12 @@ const TrackOrderScreen = () => {
 
       } else {
         console.warn('⚠️ No route found from API, using fallback');
-        useFallbackRoute(mapInstance, start, end);
+        useFallbackRoute(mapInstance, routeStart, routeEnd);
       }
     } catch (error) {
       console.error('❌ Error fetching route or timeout:', error);
       console.log('⚠️ Switching to fallback route due to error/timeout');
-      useFallbackRoute(mapInstance, start, end);
+      useFallbackRoute(mapInstance, routeStart, routeEnd);
     }
 
     // Add destination marker
@@ -1047,14 +1048,14 @@ const TrackOrderScreen = () => {
     `;
 
     new mapboxgl.Marker(destMarker)
-      .setLngLat(end as [number, number])
+      .setLngLat(routeEnd as [number, number])
       .addTo(mapInstance);
   }
 
-  // Fallback route function
-  function useFallbackRoute(mapInstance: mapboxgl.Map, start: number[], end: number[]) {
+  // Fallback route function - DRIVER → USER
+  function useFallbackRoute(mapInstance: mapboxgl.Map, routeStart: number[], routeEnd: number[]) {
     // Create a curvy route with intermediate waypoints
-    const midPoint = [(start[0] + end[0]) / 2, (start[1] + end[1]) / 2];
+    const midPoint = [(routeStart[0] + routeEnd[0]) / 2, (routeStart[1] + routeEnd[1]) / 2];
     
     // Add some variation to make the route curvy
     const curveFactor = 0.02; // Adjust for more or less curvature
@@ -1068,15 +1069,15 @@ const TrackOrderScreen = () => {
     for (let i = 0; i <= 1; i += 0.05) { // Increase resolution for smoother curve
       const t = i;
       // Cubic Bezier curve formula
-      const x = Math.pow(1 - t, 3) * start[0] + 
+      const x = Math.pow(1 - t, 3) * routeStart[0] + 
                3 * Math.pow(1 - t, 2) * t * controlPoint1[0] + 
                3 * (1 - t) * Math.pow(t, 2) * controlPoint2[0] + 
-               Math.pow(t, 3) * end[0];
+               Math.pow(t, 3) * routeEnd[0];
       
-      const y = Math.pow(1 - t, 3) * start[1] + 
+      const y = Math.pow(1 - t, 3) * routeStart[1] + 
                3 * Math.pow(1 - t, 2) * t * controlPoint1[1] + 
                3 * (1 - t) * Math.pow(t, 2) * controlPoint2[1] + 
-               Math.pow(t, 3) * end[1];
+               Math.pow(t, 3) * routeEnd[1];
       
       routeCoordinates.push([x, y]);
     }

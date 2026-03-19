@@ -145,7 +145,12 @@ const QRScannerModal: React.FC<QRScannerModalProps> = ({ isOpen, onClose, onScan
     const current = scannerRef.current;
     scannerRef.current = null;
     if (current) {
-      current.stop().catch(() => null).finally(() => current.clear().catch(() => null));
+      // Check if scanner is actually running before trying to stop
+      if (typeof current.isScanning === 'function' && current.isScanning()) {
+        current.stop().catch(() => null).finally(() => current.clear().catch(() => null));
+      } else {
+        current.clear().catch(() => null);
+      }
     }
     onClose();
   };
