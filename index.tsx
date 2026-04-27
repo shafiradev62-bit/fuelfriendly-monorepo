@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client';
 import App from './App';
 import './src/index.css';
 import './styles/ios-animations.css';
+import './styles/sweet-animations.css';
 
 // Capacitor imports
 import { Capacitor } from '@capacitor/core';

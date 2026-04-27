@@ -1,0 +1,540 @@
+/* 🎀 Sweet Animations CSS */
+
+/* Sweet Gradient Backgrounds */
+.sweet-gradient-1 {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.sweet-gradient-2 {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+.sweet-gradient-3 {
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+}
+
+.sweet-gradient-4 {
+  background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+}
+
+.sweet-gradient-5 {
+  background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+}
+
+/* Sweet Glow Effects */
+@keyframes sweet-glow {
+  0%, 100% {
+    box-shadow: 0 0 5px rgba(58, 195, 108, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(58, 195, 108, 0.8), 0 0 30px rgba(58, 195, 108, 0.6);
+  }
+}
+
+.sweet-glow {
+  animation: sweet-glow 2s ease-in-out infinite;
+}
+
+/* Sweet Pulse */
+@keyframes sweet-pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 0.9;
+  }
+}
+
+.sweet-pulse {
+  animation: sweet-pulse 2s ease-in-out infinite;
+}
+
+/* Sweet Float */
+@keyframes sweet-float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.sweet-float {
+  animation: sweet-float 3s ease-in-out infinite;
+}
+
+/* Sweet Bounce */
+@keyframes sweet-bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-15px);
+  }
+}
+
+.sweet-bounce {
+  animation: sweet-bounce 1s ease-in-out infinite;
+}
+
+/* Sweet Wiggle */
+@keyframes sweet-wiggle {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(-5deg);
+  }
+  75% {
+    transform: rotate(5deg);
+  }
+}
+
+.sweet-wiggle {
+  animation: sweet-wiggle 0.5s ease-in-out;
+}
+
+/* Sweet Shake */
+@keyframes sweet-shake {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  10%, 30%, 50%, 70%, 90% {
+    transform: translateX(-5px);
+  }
+  20%, 40%, 60%, 80% {
+    transform: translateX(5px);
+  }
+}
+
+.sweet-shake {
+  animation: sweet-shake 0.5s ease-in-out;
+}
+
+/* Sweet Heartbeat */
+@keyframes sweet-heartbeat {
+  0%, 100% {
+    transform: scale(1);
+  }
+  10%, 30% {
+    transform: scale(1.1);
+  }
+  20%, 40% {
+    transform: scale(1);
+  }
+}
+
+.sweet-heartbeat {
+  animation: sweet-heartbeat 1.5s ease-in-out infinite;
+}
+
+/* Sweet Shimmer */
+@keyframes sweet-shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+.sweet-shimmer {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.4) 50%,
+    transparent 100%
+  );
+  background-size: 1000px 100%;
+  animation: sweet-shimmer 2s infinite;
+}
+
+/* Sweet Gradient Animation */
+@keyframes sweet-gradient {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.sweet-gradient-animated {
+  background: linear-gradient(270deg, #3AC36C, #4ADE80, #22C55E, #10B981);
+  background-size: 400% 400%;
+  animation: sweet-gradient 8s ease infinite;
+}
+
+/* Sweet Rotate */
+@keyframes sweet-rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.sweet-rotate {
+  animation: sweet-rotate 3s linear infinite;
+}
+
+/* Sweet Zoom In */
+@keyframes sweet-zoom-in {
+  from {
+    transform: scale(0);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.sweet-zoom-in {
+  animation: sweet-zoom-in 0.5s ease-out;
+}
+
+/* Sweet Slide In */
+@keyframes sweet-slide-in-right {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.sweet-slide-in-right {
+  animation: sweet-slide-in-right 0.5s ease-out;
+}
+
+@keyframes sweet-slide-in-left {
+  from {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.sweet-slide-in-left {
+  animation: sweet-slide-in-left 0.5s ease-out;
+}
+
+@keyframes sweet-slide-in-up {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.sweet-slide-in-up {
+  animation: sweet-slide-in-up 0.5s ease-out;
+}
+
+@keyframes sweet-slide-in-down {
+  from {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.sweet-slide-in-down {
+  animation: sweet-slide-in-down 0.5s ease-out;
+}
+
+/* Sweet Fade In */
+@keyframes sweet-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.sweet-fade-in {
+  animation: sweet-fade-in 0.5s ease-out;
+}
+
+/* Sweet Scale In */
+@keyframes sweet-scale-in {
+  from {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.sweet-scale-in {
+  animation: sweet-scale-in 0.5s ease-out;
+}
+
+/* Sweet Flip */
+@keyframes sweet-flip {
+  from {
+    transform: perspective(400px) rotateY(90deg);
+    opacity: 0;
+  }
+  to {
+    transform: perspective(400px) rotateY(0deg);
+    opacity: 1;
+  }
+}
+
+.sweet-flip {
+  animation: sweet-flip 0.6s ease-out;
+}
+
+/* Sweet Jelly */
+@keyframes sweet-jelly {
+  0%, 100% {
+    transform: scale(1, 1);
+  }
+  25% {
+    transform: scale(1.1, 0.9);
+  }
+  50% {
+    transform: scale(0.9, 1.1);
+  }
+  75% {
+    transform: scale(1.05, 0.95);
+  }
+}
+
+.sweet-jelly {
+  animation: sweet-jelly 0.6s ease-in-out;
+}
+
+/* Sweet Rainbow Border */
+@keyframes sweet-rainbow-border {
+  0% {
+    border-color: #FF6B6B;
+  }
+  20% {
+    border-color: #4ECDC4;
+  }
+  40% {
+    border-color: #45B7D1;
+  }
+  60% {
+    border-color: #FFA07A;
+  }
+  80% {
+    border-color: #98D8C8;
+  }
+  100% {
+    border-color: #FF6B6B;
+  }
+}
+
+.sweet-rainbow-border {
+  border: 2px solid;
+  animation: sweet-rainbow-border 3s linear infinite;
+}
+
+/* Sweet Glow Text */
+@keyframes sweet-glow-text {
+  0%, 100% {
+    text-shadow: 0 0 5px rgba(58, 195, 108, 0.5);
+  }
+  50% {
+    text-shadow: 0 0 20px rgba(58, 195, 108, 1), 0 0 30px rgba(58, 195, 108, 0.8);
+  }
+}
+
+.sweet-glow-text {
+  animation: sweet-glow-text 2s ease-in-out infinite;
+}
+
+/* Sweet Bubble */
+@keyframes sweet-bubble {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.sweet-bubble {
+  animation: sweet-bubble 2s ease-in-out infinite;
+}
+
+/* Sweet Tada */
+@keyframes sweet-tada {
+  0% {
+    transform: scale(1) rotate(0deg);
+  }
+  10%, 20% {
+    transform: scale(0.9) rotate(-3deg);
+  }
+  30%, 50%, 70%, 90% {
+    transform: scale(1.1) rotate(3deg);
+  }
+  40%, 60%, 80% {
+    transform: scale(1.1) rotate(-3deg);
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+.sweet-tada {
+  animation: sweet-tada 1s ease-in-out;
+}
+
+/* Sweet Swing */
+@keyframes sweet-swing {
+  20% {
+    transform: rotate(15deg);
+  }
+  40% {
+    transform: rotate(-10deg);
+  }
+  60% {
+    transform: rotate(5deg);
+  }
+  80% {
+    transform: rotate(-5deg);
+  }
+  100% {
+    transform: rotate(0deg);
+  }
+}
+
+.sweet-swing {
+  transform-origin: top center;
+  animation: sweet-swing 1s ease-in-out;
+}
+
+/* Sweet Rubber Band */
+@keyframes sweet-rubber-band {
+  0% {
+    transform: scale(1);
+  }
+  30% {
+    transform: scaleX(1.25) scaleY(0.75);
+  }
+  40% {
+    transform: scaleX(0.75) scaleY(1.25);
+  }
+  50% {
+    transform: scaleX(1.15) scaleY(0.85);
+  }
+  65% {
+    transform: scaleX(0.95) scaleY(1.05);
+  }
+  75% {
+    transform: scaleX(1.05) scaleY(0.95);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.sweet-rubber-band {
+  animation: sweet-rubber-band 1s ease-in-out;
+}
+
+/* Sweet Hover Effects */
+.sweet-hover-lift {
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.sweet-hover-lift:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+}
+
+.sweet-hover-grow {
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.sweet-hover-grow:hover {
+  transform: scale(1.05);
+}
+
+.sweet-hover-glow {
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.sweet-hover-glow:hover {
+  box-shadow: 0 0 20px rgba(58, 195, 108, 0.6);
+}
+
+/* Sweet Loading Spinner */
+@keyframes sweet-spinner {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.sweet-spinner {
+  border: 3px solid rgba(58, 195, 108, 0.2);
+  border-top: 3px solid #3AC36C;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  animation: sweet-spinner 1s linear infinite;
+}
+
+/* Sweet Stagger Animation */
+.sweet-stagger-item {
+  opacity: 0;
+  animation: sweet-fade-in 0.5s ease-out forwards;
+}
+
+.sweet-stagger-item:nth-child(1) { animation-delay: 0.1s; }
+.sweet-stagger-item:nth-child(2) { animation-delay: 0.2s; }
+.sweet-stagger-item:nth-child(3) { animation-delay: 0.3s; }
+.sweet-stagger-item:nth-child(4) { animation-delay: 0.4s; }
+.sweet-stagger-item:nth-child(5) { animation-delay: 0.5s; }
+.sweet-stagger-item:nth-child(6) { animation-delay: 0.6s; }
+.sweet-stagger-item:nth-child(7) { animation-delay: 0.7s; }
+.sweet-stagger-item:nth-child(8) { animation-delay: 0.8s; }
+
+/* Sweet Glass Effect */
+.sweet-glass {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+/* Sweet Neon Glow */
+.sweet-neon {
+  text-shadow: 
+    0 0 5px #3AC36C,
+    0 0 10px #3AC36C,
+    0 0 20px #3AC36C,
+    0 0 40px #3AC36C;
+}
