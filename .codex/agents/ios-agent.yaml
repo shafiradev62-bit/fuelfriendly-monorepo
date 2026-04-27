@@ -1,0 +1,157 @@
+name: fuel-friend-ios-builder
+description: Builds and deploys iOS app to TestFlight using remote macOS agent
+platform: macos
+instanceType: macos-m1-large
+
+environment:
+  NODE_VERSION: '20'
+  XCODE_VERSION: '15.0'
+  COCOAPODS_VERSION: '1.14'
+
+triggers:
+  - type: push
+    branches: [main, develop]
+    paths:
+      - 'src/**'
+      - 'capacitor.config.ts'
+      - 'package.json'
+  - type: manual
+    requireApproval: true
+
+steps:
+  - name: Checkout Code
+    uses: actions/checkout@v4
+    
+  - name: Setup Node.js
+    uses: actions/setup-node@v4
+    with:
+      node-version: ${{ env.NODE_VERSION }}
+      cache: 'npm'
+      
+  - name: Cache node_modules
+    uses: actions/cache@v4
+    with:
+      path: node_modules
+      key: ${{ runner.os }}-node-${{ hashFiles('package-lock.json') }}
+      
+  - name: Install Dependencies
+    run: npm ci
+    
+  - name: Build Web Assets
+    run: npm run build
+    timeout-minutes: 10
+    
+  - name: Sync iOS
+    run: npx cap sync ios
+    timeout-minutes: 5
+    
+  - name: Install CocoaPods
+    workingDirectory: ios/App
+    run: pod install
+    timeout-minutes: 10
+    
+  - name: Configure Bundle ID
+    script: |
+      /usr/libexec/PlistBuddy -c "Set :CFBundleIdentifier com.fuelfriend.app" \
+        ios/App/App/Info.plist
+        
+  - name: Configure Google Sign-In
+    script: |
+      # Replace placeholder with actual client ID
+      sed -i '' "s/YOUR_IOS_CLIENT_ID/${{ secrets.GOOGLE_IOS_CLIENT_ID }}/g" \
+        ios/App/App/Info.plist
+        
+  - name: Update Info.plist Permissions
+    script: |
+      # Verify all required permissions are present
+      /usr/libexec/PlistBuddy -c "Print :NSCameraUsageDescription" \
+        ios/App/App/Info.plist || exit 1
+      /usr/libexec/PlistBuddy -c "Print :NSPhotoLibraryUsageDescription" \
+        ios/App/App/Info.plist || exit 1
+      /usr/libexec/PlistBuddy -c "Print :NSLocationWhenInUseUsageDescription" \
+        ios/App/App/Info.plist || exit 1
+        
+  - name: Select Xcode Version
+    script: |
+      sudo xcode-select -s /Applications/Xcode_15.0.app/Contents/Developer
+      
+  - name: Archive for TestFlight
+    script: |
+      set -e
+      
+      xcodebuild -workspace ios/App/App.xcworkspace \
+        -scheme App \
+        -configuration Release \
+        -destination generic/platform=iOS \
+        -archivePath build/App.xcarchive \
+        clean archive \
+        CODE_SIGN_STYLE=Automatic \
+        DEVELOPMENT_TEAM=${{ secrets.APPLE_TEAM_ID }} \
+        PROVISIONING_PROFILE_SPECIFIER="${{ secrets.IOS_PROVISIONING_PROFILE }}"
+        
+    timeout-minutes: 30
+    
+  - name: Export IPA (Optional - for local testing)
+    script: |
+      xcodebuild -exportArchive \
+        -archivePath build/App.xcarchive \
+        -exportPath build/ipa \
+        -exportOptionsPlist exportOptions.plist \
+        -allowProvisioningUpdates
+        
+    continue-on-error: true
+    
+  - name: Upload to App Store Connect
+    script: |
+      xcrun altool --upload-app \
+        --type ios \
+        --file build/App.xcarchive \
+        --apiKey ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }} \
+        --apiIssuer ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }} \
+        --asc-provider ${{ secrets.APPLE_TEAM_ID }}
+        
+    timeout-minutes: 30
+    
+  - name: Notify Success
+    if: success()
+    script: |
+      echo "✅ Successfully uploaded to TestFlight!"
+      echo "Build will be available in 10-30 minutes after processing"
+      
+  - name: Notify Failure
+    if: failure()
+    script: |
+      echo "❌ Build failed!"
+      echo "Check logs for details"
+      
+onFailure:
+  - name: Send Slack Notification
+    uses: slackapi/slack-github-action@v1
+    with:
+      channel: '#fuel-friend-builds'
+      text: "❌ iOS Build Failed\nCommit: ${{ github.sha }}\nError: See logs"
+      webhook-url: ${{ secrets.SLACK_WEBHOOK_URL }}
+      
+onSuccess:
+  - name: Send Slack Notification
+    uses: slackapi/slack-github-action@v1
+    with:
+      channel: '#fuel-friend-builds'
+      text: "✅ iOS Build Successful!\nUploaded to TestFlight\nCommit: ${{ github.sha }}"
+      webhook-url: ${{ secrets.SLACK_WEBHOOK_URL }}
+      
+artifacts:
+  - name: xcarchive
+    path: build/App.xcarchive
+    retention: 7d
+  - name: logs
+    path: build/*.log
+    retention: 30d
+
+cache:
+  paths:
+    - node_modules
+    - ios/App/Pods
+    - ~/Library/Caches/CocoaPods
+
+timeout: 3600  # 60 minutes total

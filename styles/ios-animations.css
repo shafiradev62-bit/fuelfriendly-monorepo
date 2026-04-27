@@ -1,0 +1,214 @@
+/* iOS-Style Smooth Animations */
+
+/* iOS Spring Animation Keyframes */
+@keyframes ios-spring-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.95) translateY(10px);
+  }
+  50% {
+    transform: scale(1.01) translateY(-2px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes ios-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes ios-slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes ios-bounce {
+  0% {
+    transform: scale(0.95);
+  }
+  50% {
+    transform: scale(1.02);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* iOS Button Press Effect */
+.ios-button {
+  transition: all 0.15s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.ios-button:active {
+  transform: scale(0.96);
+  opacity: 0.85;
+}
+
+/* iOS Card Interaction */
+.ios-card {
+  transition: all 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+.ios-card:active {
+  transform: scale(0.98);
+}
+
+/* iOS Input Focus */
+.ios-input {
+  transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.ios-input:focus {
+  transform: scale(1.01);
+  box-shadow: 0 0 0 3px rgba(58, 195, 108, 0.1);
+}
+
+/* iOS Modal Slide Up */
+.ios-modal-enter {
+  animation: ios-slide-up 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+/* iOS List Item Stagger */
+.ios-list-item {
+  animation: ios-fade-in 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  animation-fill-mode: both;
+}
+
+.ios-list-item:nth-child(1) { animation-delay: 0.05s; }
+.ios-list-item:nth-child(2) { animation-delay: 0.1s; }
+.ios-list-item:nth-child(3) { animation-delay: 0.15s; }
+.ios-list-item:nth-child(4) { animation-delay: 0.2s; }
+.ios-list-item:nth-child(5) { animation-delay: 0.25s; }
+.ios-list-item:nth-child(6) { animation-delay: 0.3s; }
+.ios-list-item:nth-child(7) { animation-delay: 0.35s; }
+.ios-list-item:nth-child(8) { animation-delay: 0.4s; }
+
+/* iOS Success Bounce */
+.ios-success {
+  animation: ios-bounce 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+/* iOS Smooth Scroll */
+.ios-scroll {
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* iOS Blur Background */
+.ios-blur {
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  background-color: rgba(255, 255, 255, 0.8);
+}
+
+.ios-blur-dark {
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  background-color: rgba(0, 0, 0, 0.6);
+}
+
+/* iOS Ripple Effect (subtle) */
+.ios-ripple {
+  position: relative;
+  overflow: hidden;
+}
+
+.ios-ripple::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  transform: translate(-50%, -50%);
+  transition: width 0.4s, height 0.4s;
+}
+
+.ios-ripple:active::after {
+  width: 300px;
+  height: 300px;
+}
+
+/* iOS Loading Spinner */
+@keyframes ios-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.ios-spinner {
+  animation: ios-spin 0.8s linear infinite;
+}
+
+/* iOS Skeleton Loading */
+@keyframes ios-skeleton {
+  0% {
+    background-position: -200px 0;
+  }
+  100% {
+    background-position: calc(200px + 100%) 0;
+  }
+}
+
+.ios-skeleton {
+  background: linear-gradient(
+    90deg,
+    #f0f0f0 0px,
+    #f8f8f8 40px,
+    #f0f0f0 80px
+  );
+  background-size: 200px 100%;
+  animation: ios-skeleton 1.2s ease-in-out infinite;
+}
+
+/* iOS Pull to Refresh */
+@keyframes ios-pull-refresh {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.ios-pull-refresh {
+  animation: ios-pull-refresh 1s linear infinite;
+}
+
+/* Smooth transitions for all interactive elements */
+* {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* iOS-style momentum scrolling */
+body {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+}

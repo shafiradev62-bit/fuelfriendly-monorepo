@@ -1,0 +1,111 @@
+name: fuel-friend-web-deployer
+description: Deploys web app to Vercel with CDN distribution
+platform: ubuntu
+instanceType: ubuntu-22.04
+
+environment:
+  NODE_VERSION: '20'
+  VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+  VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+
+triggers:
+  - type: push
+    branches: [main]
+    paths:
+      - 'src/**'
+      - 'public/**'
+      - 'vite.config.ts'
+      - 'package.json'
+  - type: manual
+    requireApproval: false
+
+steps:
+  - name: Checkout Code
+    uses: actions/checkout@v4
+    
+  - name: Setup Node.js
+    uses: actions/setup-node@v4
+    with:
+      node-version: ${{ env.NODE_VERSION }}
+      cache: 'npm'
+      
+  - name: Cache node_modules
+    uses: actions/cache@v4
+    with:
+      path: node_modules
+      key: ${{ runner.os }}-node-${{ hashFiles('package-lock.json') }}
+      
+  - name: Install Vercel CLI
+    run: npm install -g vercel@latest
+    
+  - name: Install Dependencies
+    run: npm ci
+    
+  - name: Build Production
+    run: npm run build
+    timeout-minutes: 10
+    
+  - name: Run Lighthouse Audit (Optional)
+    continue-on-error: true
+    run: |
+      npm install -g @lhci/cli
+      lhci autorun \
+        --upload.target=temporary-public-storage \
+        --collect.staticDistDir=./dist
+        
+  - name: Deploy to Vercel Preview
+    if: github.ref != 'refs/heads/main'
+    run: |
+      vercel --token=${{ secrets.VERCEL_TOKEN }} \
+        --confirm \
+        --prebuilt
+    env:
+      VERCEL_ORG_ID: ${{ env.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ env.VERCEL_PROJECT_ID }}
+      
+  - name: Deploy to Vercel Production
+    if: github.ref == 'refs/heads/main'
+    run: |
+      vercel --prod --token=${{ secrets.VERCEL_TOKEN }} \
+        --confirm \
+        --prebuilt
+    env:
+      VERCEL_ORG_ID: ${{ env.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ env.VERCEL_PROJECT_ID }}
+      
+  - name: Generate Deployment Report
+    if: success()
+    script: |
+      echo "✅ Deployment successful!"
+      echo "Production URL: https://fuel-friend.vercel.app"
+      echo "Deployment time: $(date)"
+      
+onFailure:
+  - name: Send Slack Notification
+    uses: slackapi/slack-github-action@v1
+    with:
+      channel: '#fuel-friend-builds'
+      text: "❌ Web Deployment Failed\nCommit: ${{ github.sha }}\nError: See logs"
+      webhook-url: ${{ secrets.SLACK_WEBHOOK_URL }}
+      
+onSuccess:
+  - name: Send Slack Notification
+    uses: slackapi/slack-github-action@v1
+    with:
+      channel: '#fuel-friend-builds'
+      text: "✅ Web Deployed Successfully!\n🌐 https://fuel-friend.vercel.app\nCommit: ${{ github.sha }}"
+      webhook-url: ${{ secrets.SLACK_WEBHOOK_URL }}
+      
+artifacts:
+  - name: dist
+    path: dist/
+    retention: 30d
+  - name: lighthouse-report
+    path: .lighthouseci/
+    retention: 7d
+
+cache:
+  paths:
+    - node_modules
+
+timeout: 1800  # 30 minutes total

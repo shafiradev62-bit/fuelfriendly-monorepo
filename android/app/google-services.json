@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "453013100259",
+    "project_id": "fuelfriendly-100fb",
+    "storage_bucket": "fuelfriendly-100fb.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:453013100259:android:4f8d581bc58af465e397d6",
+        "android_client_info": {
+          "package_name": "com.fuelfriendly.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "453013100259-gvhv3jcoos9avleuhp8alfkvupq9nl31.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.fuelfriendly.app",
+            "certificate_hash": "9f8bd3919134e8eca89cf5e284df838aff64e7dc"
+          }
+        },
+        {
+          "client_id": "453013100259-o1ajdogip95f5qa80s0n2qur2p5mjiam.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCDY_Pz2vy1pozUjz05xCHeSaH1vNlvr1I"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "453013100259-o1ajdogip95f5qa80s0n2qur2p5mjiam.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
